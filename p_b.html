@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+		
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+	    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+		<style type="text/css">
+
+		body{background-color:white;}  /*#FF8C00*/
+
+		button{
+			position:relative;
+			cursor:pointer;
+			outline:none;
+			font-family: georgia;
+			margin-left: 97vh;
+			margin-top: 5vh;
+		}
+
+		h2{
+			position:relative;
+			text-align:center;
+			font-family: georgia;
+		}
+
+		h5{
+			position:relative;
+			text-align:center;
+			font-family: georgia;
+			top:5%;
+		}
+
+		input{
+			outline:none;
+			position:absolute;
+			font-family: georgia;
+		}
+
+		.container_ss{
+			position: absolute;
+			margin-left: 37.5%;
+		}
+
+		.container_vol{
+			position: relative;
+			margin-left: 37.5%;
+			margin-top: 8%;
+		}
+
+		input#seekslider_input{
+			width:50vh;
+		}
+
+		input#volumeslider_input{
+			width:50vh;
+		}
+ 
+	</style>
+</head>
+<body>
+	<h2>Progetto di un armonizzatore e sintetizzatore in Javascript</h2>
+	<div>
+		<div>
+			<h5>Midi input:press to listen</h5>
+        		<button type="button" class="btn btn-default btn-sm" id="registered_Midi_track">
+          			<span class="glyphicon glyphicon-volume-up"></span> Play
+        		</button>
+		</div>
+		<div class="container_ss">
+			<label for="seekslider_input">Seek Slider</label>
+			<input id="seekslider_input" type="range" min="0" max="100" value="0" step="1">
+		</div>
+		<div class="container_vol">
+			<label for="volumeslider_input">Volume</label>
+			<input id="volumeslider_input" type="range" min="0" max="100" value="100" step="1">
+		</div>
+	</div>
+
+	<!--
+	<div>
+		<div>
+			<p>Harmonized output:press to listen</p>
+        		<button type="button" class="btn btn-default btn-sm" id="harmonized_Midi_track">
+          			<span class="glyphicon glyphicon-volume-up"></span> Play
+        		</button>
+		</div>
+		<div>
+			<label for="seekslider_output">Seek Slider</label>
+			<input id="seekslider_output" type="range" min="0" max="100" value="0" step="1">
+		</div>
+		<div>
+			<label for="volumeslider_output">Volume</label>
+			<input id="volumeslider_output" type="range" min="0" max="100" value="100" step="1">
+		</div>
+	</div>
+-->
+
+	<script type="text/javascript">
+
+		var reg_track,playbtn_in,playbtn_out,harm_track,seekslider_input,seekslider_output,volumeslider_input,volumeslider_output,seeking_in,seeking_out;
+
+		function audioPlayer(){
+			
+			reg_track = new Audio();
+			reg_track.src = "audio/haydn-symphony88-1.mid";
+			reg_track.loop=true;
+			reg_track.play();
+
+			playbtn_in=document.getElementById("registered_Midi_track");
+
+			//playbtn_out=document.getElementById("harmonized_Midi_track");
+
+			//setting objects references
+			seekslider_input=document.getElementById("seekslider_input");
+			volumeslider_input=document.getElementById("volumeslider_input");
+			
+			//seekslider_output=document.getElementById("seekslider_output");
+			//volumeslider_output=document.getElementById("volumeslider_output");
+
+
+			playbtn_in.addEventListener("click",playPause);
+			//playbtn_out.addEventListener("click",playPause);
+
+			//mutebtn.addEventListener("click",mute);
+
+			seekslider_input.addEventListener("mousedown",function(event){seeking_in=true;seek(event);})
+			seekslider_input.addEventListener("mousemove",function(event){seek(event);})
+			seekslider_input.addEventListener("mouseup",function(){seeking_in=false;})
+			volumeslider_input.addEventListener("mousemove",setVolume_in);
+
+			//seekslider_output.addEventListener("mousedown",function(event){seeking_out=true;seek(event);})
+			//seekslider_output.addEventListener("mousemove",function(event){seek(event);})
+			//seekslider_output.addEventListener("mouseup",function(){seeking_out=false;})
+			//volumeslider_output.addEventListener("mousemove",setVolume_out);
+
+			///////////////////
+			function playPause(){
+				if (reg_track.paused){
+					reg_track.play();
+				}
+				else{
+					reg_track.pause();
+				}
+			}
+
+			///////////////////
+			function seek(event){
+				if (seeking_in){
+					seekslider_input.value=event.clientX-seekslider_input.offsetLeft;
+					var seekto=reg_track.duration*(seekslider_input.value/100);
+					reg_track.currentTime=seekto;
+				}
+				//else if (seeking_out){
+					//seekslider_output.value=event.clientX-seekslider_output.offsetLeft;
+					//var seekto=harm_track.duration*(seekslider_output.value/100);
+					//harm_track.currentTime=seekto;
+				//}
+			}
+
+			///////////////////
+			function setVolume_in(){
+				reg_track.volume=volumeslider_input.value/100;
+			}
+
+			///////////////////
+			//function setVolume_out(){
+				//harm_track.volume=volumeslider_output.value/100;
+			//}
+		}
+		window.addEventListener("load", audioPlayer);
+	</script>
+</body>
+</html>
+
+
+
