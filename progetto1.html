@@ -6,13 +6,16 @@
 	<script type="text/javascript">
 
 		i=0;
+		note_array = new Array;
+		block = new Array;
+		j = 0; 
 
 		navigator.requestMIDIAccess().then(onMIDISuccess);
 
 		function onMIDISuccess(midiAccess) {
 
-		    var inputs = midiAccess.inputs;
-		    var outputs = midiAccess.outputs;
+		    inputs = midiAccess.inputs;
+		    outputs = midiAccess.outputs;
 		    
 		    for (var input of midiAccess.inputs.values()){
 		        input.onmidimessage = getMIDIMessage;
@@ -22,9 +25,13 @@
 		function getMIDIMessage(midiMessage) {
 			message = midiMessage;
 			//console.log(message);
-			note_array = new Array;
 			note_array[i]=message.data;
 			i++;
+		}
+		
+		while (j < note_array.length){
+		    block[j/10]  = note_array.slice(j,j+10);
+		    j = j+10;
 		}
 
 	</script>
