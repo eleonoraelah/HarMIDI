@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+	<script type="text/javascript">
+
+		i=0;
+
+		navigator.requestMIDIAccess().then(onMIDISuccess);
+
+		function onMIDISuccess(midiAccess) {
+
+		    var inputs = midiAccess.inputs;
+		    var outputs = midiAccess.outputs;
+		    
+		    for (var input of midiAccess.inputs.values()){
+		        input.onmidimessage = getMIDIMessage;
+		    }
+		}
+
+		function getMIDIMessage(midiMessage) {
+			message = midiMessage;
+			//console.log(message);
+			note_array = new Array;
+			note_array[i]=message.data;
+			i++;
+		}
+
+	</script>
+</body>
+</html>
