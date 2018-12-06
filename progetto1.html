@@ -29,10 +29,13 @@
 			i++;
 		}
 		
-		while (j < note_array.length){
+		setTimeout(function (){
+			while (j < note_array.length){
 		    block[j/10]  = note_array.slice(j,j+10);
 		    j = j+10;
-		}
+			}
+		},10000);
+		
 
 	</script>
 </body>
