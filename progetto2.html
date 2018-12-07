@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+	<div>
+		<button id="rec">Rec</button>
+		<button id="play">Play</button>
+		<button id="harm">Harm</button>
+	</div>
+	<script type="text/javascript">
+
+		var i=0;
+		var note_array = new Array;
+		var block = new Array;
+		var j = 0; 
+		var send=false;
+
+		document.querySelectorAll("#rec").forEach(toggleRecord);
+
+		function toggleRecord(item){
+			item.onclick = record;
+		}
+
+		function record(){
+			send = !send;
+			console.log(send + " record");
+			if (send){
+				navigator.requestMIDIAccess().then(onMIDISuccess);
+			}
+			else{
+				console.log("else");
+				while (j < note_array.length){
+				block[j/10]  = note_array.slice(j,j+10);
+				j = j+10;
+				}
+			}
+		}
+
+		//rec = document.getElementById("rec");
+		//rec.onclick = record(send);
+
+		//navigator.requestMIDIAccess().then(onMIDISuccess);
+
+		function onMIDISuccess(midiAccess) {
+
+			console.log(midiAccess);
+		    inputs = midiAccess.inputs;
+		    outputs = midiAccess.outputs;
+		    
+		    for (var input of midiAccess.inputs.values()){
+		        input.onmidimessage = getMIDIMessage;
+		    }
+		}
+
+		function getMIDIMessage(midiMessage) {
+			message = midiMessage;
+			//console.log(message);
+			note_array[i]=message.data;
+			i++;
+		}
+		
+	</script>
+</body>
+</html>
