@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+	<div>
+		<button id="rec">Rec</button>
+		<button id="play">Play</button>
+		<button id="harm">Harm</button>
+	</div>
+	<script type="text/javascript">
+
+		var i=0;
+		var note_array = new Array;
+		var block = new Array;
+		var j = 0; 
+		var send=false;
+
+		var duration = [0, 0];
+		var time = Array;
+		var now;
+
+		document.querySelectorAll("#rec").forEach(toggleRecord);
+
+		function toggleRecord(item){
+			item.onclick = record;
+		}
+
+		function record(){
+			send = !send;
+			console.log(send + " record");
+			if (send){
+				navigator.requestMIDIAccess().then(onMIDISuccess);
+			}
+			else{
+				console.log("else");
+				while (j < note_array.length){
+				block[j/10]  = note_array.slice(j,j+10);
+				j = j+10;
+				}
+			}
+		}
+
+		//rec = document.getElementById("rec");
+		//rec.onclick = record(send);
+
+		//navigator.requestMIDIAccess().then(onMIDISuccess);
+
+		function onMIDISuccess(midiAccess) {
+
+			console.log(midiAccess);
+		    inputs = midiAccess.inputs;
+		    outputs = midiAccess.outputs;
+		    
+		    for (var input of midiAccess.inputs.values()){
+		        input.onmidimessage = getMIDIMessage;
+		    }
+		}
+
+		function getMIDIMessage(midiMessage) {
+			message = midiMessage;
+			if (message.data[0] == 139){
+				//console.log(message);
+				note_array[i]=message.data;
+				time[i] = message.timeStamp;
+				console.log("Time "+time[i] + "indice "+ i);
+				if (i > 0){
+					duration[i] = time[i] - time[i-1];
+					console.log(duration[i]+" durata");
+				}
+				i++;
+			}
+		}
+
+		document.querySelectorAll("#play").forEach(startplaying);
+
+		var k = 1;
+		var c;
+		function startplaying(k){
+			c = new AudioContext();
+	    	suona(440,duration[k]);
+	    	setTimeout(startplaying(k++),duration[k]);
+		}
+		function suona(freq, howlong){
+		    osc = c.createOscillator();
+		    osc.connect(c.destination);
+		    osc.frequency.value = freq;
+		    osc.start();
+		    osc.stop(Math.round(howlong)/1000);
+		}
+	</script>
+</body>
+</html>
