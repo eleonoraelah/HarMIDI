@@ -9,23 +9,20 @@
 		<button id="harm">Harm</button>
 	</div>
 	<script type="text/javascript">
-
 		var i=0;
 		var note_array = new Array;
 		var block = new Array;
 		var j = 0; 
 		var send=false;
-
+		
 		var duration = new Array;
 		var time = new Array;
-		var noteOn = new Array;		
+		var noteOn = new Array;	
 
 		document.querySelectorAll("#rec").forEach(toggleRecord);
-
 		function toggleRecord(item){
 			item.onclick = record;
 		}
-
 		function record(){
 			send = !send;
 			console.log(send + " record");
@@ -41,13 +38,7 @@
 			}
 		}
 
-		//rec = document.getElementById("rec");
-		//rec.onclick = record(send);
-
-		//navigator.requestMIDIAccess().then(onMIDISuccess);
-
 		function onMIDISuccess(midiAccess) {
-
 			console.log(midiAccess);
 		    inputs = midiAccess.inputs;
 		    outputs = midiAccess.outputs;
@@ -56,14 +47,12 @@
 		        input.onmidimessage = getMIDIMessage;
 		    }
 		}
-
 		function getMIDIMessage(midiMessage) {
 			message = midiMessage;
 			if (message.data[0] == 155 || message.data[0] == 139){
 				//console.log(message);
 				note_array[i]=message.data;
 				time[i] = message.timeStamp;
-				//console.log("Time "+time[i] + "indice "+ i);
 				if (i > 0){
 					duration[i] = time[i] - time[i-1];
 					console.log(duration[i]+" durata");
@@ -76,63 +65,36 @@
 				i++;
 			}
 		}
-
 		document.querySelectorAll("#play").forEach(togglePlay);
-
 		function togglePlay(item){
 			item.onclick = startplaying;
 		}
-
 		var k = 1;
 		var c;
 		function startplaying(){
-			while (k<noteOn.length){
-				console.log(k);
+			if (k<noteOn.length){
 				if (noteOn[k]){
-					console.log(noteOn[k]);
-					suona(Math.round(440*Math.pow(2,1/12)**k),duration[k]);
+					console.log(noteOn[k] + " per " + duration[k] + " k = "+k);
+					suona(Math.round(100*Math.pow(2,1/12)**k));
+					setTimeout(startplaying, duration[k]);
+					setTimeout(console.log(" k = "+k),duration[k]);
 				} else{
-					console.log(noteOn[k]);
-					//setTimeout(startplaying, duration[k]+10000);
-					//suona(Math.round(0),duration[k]);
-					setTimeout(k++, duration[k]);
+					console.log(noteOn[k] + " per " + duration[k]);
+					setTimeout(startplaying, duration[k]);
+					setTimeout(console.log(" k = "+k),duration[k]);
 					
 				}
+			k++;
 			}
-		}
-		function suona(freq, howlong){
-			c = new AudioContext();
-		    osc = c.createOscillator();
-		    osc.connect(c.destination);
-		    osc.frequency.value = freq;
-		    osc.start();
-		    osc.stop(Math.round(howlong)/1000);
-		    //k++;
-		    setTimeout(k++, howlong);
-		}
-
-		/*
-		function startplaying(){
-			suona(Math.round(440*Math.pow(2,1/12)**k));
 		}
 		function suona(freq){
 			c = new AudioContext();
 		    osc = c.createOscillator();
 		    osc.connect(c.destination);
 		    osc.frequency.value = freq;
-		    while (k<noteOn.length){
-				console.log("Why isn't it playing?");
-				if (noteOn[k]){
-					osc.start();
-		   	 		osc.stop(Math.round(howlong)/1000);
-					setTimeout(suona(Math.round(440*Math.pow(2,1/12)**k)), duration[k]);
-					k++;
-				} else{
-					setTimeout(suona(Math.round(440*Math.pow(2,1/12)**(k+1))), duration[k]);
-				}
-			}
+		    osc.start();
+		    osc.stop(Math.round(duration[k])/1000);
 		}
-		*/
 	</script>
 </body>
 </html>
