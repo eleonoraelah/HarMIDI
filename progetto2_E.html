@@ -87,13 +87,15 @@
 		var c;
 		function startplaying(){
 			while (k<noteOn.length){
+				console.log(k);
 				if (noteOn[k]){
 					console.log(noteOn[k]);
 					suona(Math.round(440*Math.pow(2,1/12)**k),duration[k]);
 				} else{
 					console.log(noteOn[k]);
 					//setTimeout(startplaying, duration[k]+10000);
-					suona(Math.round(0),duration[k]);
+					//suona(Math.round(0),duration[k]);
+					setTimeout(k++, duration[k]);
 					
 				}
 			}
@@ -105,8 +107,8 @@
 		    osc.frequency.value = freq;
 		    osc.start();
 		    osc.stop(Math.round(howlong)/1000);
-		    k++;
-		    setTimeout(startplaying(), duration[k]);
+		    //k++;
+		    setTimeout(k++, howlong);
 		}
 
 		/*
