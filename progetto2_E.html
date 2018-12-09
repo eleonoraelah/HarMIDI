@@ -90,8 +90,6 @@
 				if (noteOn[k]){
 					console.log(noteOn[k]);
 					suona(Math.round(440*Math.pow(2,1/12)**k),duration[k]);
-					
-					k++;
 				} else{
 					console.log(noteOn[k]);
 					//setTimeout(startplaying, duration[k]+10000);
@@ -108,7 +106,7 @@
 		    osc.start();
 		    osc.stop(Math.round(howlong)/1000);
 		    k++;
-		    setTimeout(startplaying(), duration[k]+10000);
+		    setTimeout(startplaying(), duration[k]);
 		}
 
 		/*
