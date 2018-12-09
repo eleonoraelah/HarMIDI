@@ -19,6 +19,9 @@
 		var time = new Array;
 		var noteOn = new Array;	
 
+		var min_midi_freq = 21;
+		var min_keyb_freq = 27.5;
+
 		document.querySelectorAll("#rec").forEach(toggleRecord);
 		function toggleRecord(item){
 			item.onclick = record;
@@ -55,11 +58,13 @@
 				time[i] = message.timeStamp;
 				if (i > 0){
 					duration[i] = time[i] - time[i-1];
-					console.log(duration[i]+" durata");
+					//console.log(duration[i]+" durata");
 					if (note_array[i][0] < note_array[i-1][0]){ //139 < 155 the note has been played
 						noteOn[i] = true;
+						console.log(duration[i]+" durata "+ note_array[i-1][1] + " ON");
 					} else {
 						noteOn[i] = false;
+						console.log(duration[i]+" durata "+ note_array[i-1][1] + " OFF");
 					}
 				}
 				i++;
@@ -72,16 +77,19 @@
 		var k = 1;
 		var c;
 		function startplaying(){
-			if (k<noteOn.length){
+			//if (k<noteOn.length){
+			if (k<note_array.length){
+				midi_freq = note_array[k-1][1] // midi freq of the note being played
+				keyb_freq = min_keyb_freq*Math.pow(2,(midi_freq - min_midi_freq)**1/12);
 				if (noteOn[k]){
-					console.log(noteOn[k] + " per " + duration[k] + " k = "+k);
-					suona(Math.round(100*Math.pow(2,1/12)**k));
+					suona(keyb_freq);
+					console.log(midi_freq + " = " + keyb_freq + " durata " + duration[k] + " ON");
 					setTimeout(startplaying, duration[k]);
-					setTimeout(console.log(" k = "+k),duration[k]);
+					//setTimeout(console.log(" k = "+k),duration[k]);
 				} else{
-					console.log(noteOn[k] + " per " + duration[k]);
+					console.log(midi_freq + " = " + keyb_freq + " durata " + duration[k] + " OFF");
 					setTimeout(startplaying, duration[k]);
-					setTimeout(console.log(" k = "+k),duration[k]);
+					//setTimeout(console.log(" k = "+k),duration[k]);
 					
 				}
 			k++;
@@ -93,7 +101,7 @@
 		    osc.connect(c.destination);
 		    osc.frequency.value = freq;
 		    osc.start();
-		    osc.stop(Math.round(duration[k])/1000);
+		    osc.stop(duration[k]/1000);
 		}
 	</script>
 </body>
