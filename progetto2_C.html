@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+
+	<style type="text/css">
+	    body{background-color:#FF8C00;}  /*#FF8C00*/
+
+		button{
+			position:relative;
+			cursor:pointer;
+			outline:none;
+			font-family: georgia;
+		}
+
+		h2{
+			position:relative;
+			text-align:center;
+			font-family: georgia;
+			font-size: 150%;
+			margin-top: 2%;
+		}
+
+		.container{
+			position:relative;
+			text-align:center;
+		}
+
+		h5{
+			font-family: georgia;
+			margin-top: 5%;
+		}
+
+    </style>
+</head>
+<body>
+	<h2>Progetto di un armonizzatore e sintetizzatore di una sequenza midi in ingresso</h2>
+	<div>
+		<div id="container_1" class="container">
+			<h5>Click "rec" to start aquiring data:</h5>
+			<button id="rec" class="btn btn-success">Record input data</button>
+		</div>
+		<div id="container_2" class="container">
+			<h5>Click "play" to play the input sequence:</h5>
+			<button id="play" class="btn btn-success">Play</button>
+		</div>
+		<div id="container_3" class="container">
+			<h5>Click "Harm" one time to listen to the perfect 5th harmonization;
+			Click two times to listen to the perfect 4th harmonization</h5>
+			<button id="harm" class="btn btn-success">Harmonized version</button>
+		</div>
+	</div>
+
+	<script type="text/javascript"> 
+
+		//PROBLEMA: NON VA PIU LA FUNZIONE PLAY DA SOLA UFFA
+		 
+		var i = 0;
+		var note_array = new Array;
+		var block = new Array;
+		var j = 0; 
+		var send = false;
+		var clicked = false;
+		
+		var pinco = 0;
+		var duration = new Array;
+		var time = new Array;
+		var noteOn = new Array;	
+		var harm_note_to_play_5 = new Array;
+		var note = new Array;
+
+		var min_midi_freq = 21;
+		var min_keyb_freq = 27.5;
+
+		document.querySelectorAll("#rec").forEach(toggleRecord);
+		
+		function toggleRecord(item){
+			item.onclick = record;
+		}
+		
+		function record(){
+			send = !send;
+			console.log(send + " record");
+			if (send){
+				navigator.requestMIDIAccess().then(onMIDISuccess);
+			}
+			else{
+				/*console.log("else");
+				while (j < note_array.length){
+				block[j/10]  = note_array.slice(j,j+10);
+				j = j+10;
+				}*/
+				pinco = i;
+				console.log("pinco: " + pinco);
+			}
+		}
+
+		function onMIDISuccess(midiAccess) {
+			console.log(midiAccess);
+		    inputs = midiAccess.inputs;
+		    outputs = midiAccess.outputs;
+		    
+		    for (var input of midiAccess.inputs.values()){
+		        input.onmidimessage = getMIDIMessage;
+		    }
+		}
+		
+		function getMIDIMessage(midiMessage) {
+			message = midiMessage;
+			if (message.data[0] == 155 || message.data[0] == 139){
+				//console.log(message);
+				note_array[i]=message.data;
+				time[i] = message.timeStamp;
+				if (i > 0){
+					if (i == pinco){
+						duration[i] = 200; //arbitrary duration
+					} else{
+						duration[i] = time[i] - time[i-1];
+					}
+					//console.log(duration[i]+" durata");
+					if (note_array[i][0] < note_array[i-1][0]){ //139 < 155 the note has been played
+						noteOn[i] = true;
+						console.log(duration[i]+" durata "+ note_array[i-1][1] + " ON");
+					} else {
+						noteOn[i] = false;
+						console.log(duration[i]+" durata "+ note_array[i-1][1] + " OFF");
+					}
+				}
+				i++;
+			}
+		}
+		
+		document.querySelectorAll("#play").forEach(togglePlay);
+		
+		function togglePlay(item){
+			item.onclick = startPlaying;
+		}
+		
+		var k = 1;
+		var c;
+		
+		function startPlaying(){
+			//if (k<noteOn.length){
+			if (k<note_array.length){
+				midi_freq = note_array[k-1][1] // midi freq of the note being played
+				keyb_freq = min_keyb_freq*Math.pow(2,(midi_freq - min_midi_freq)**1/12);
+				if (noteOn[k]){
+					if (clicked == true){
+						suona(keyb_freq);
+						playHarm(harm_note_to_play_5[k-1]);
+						console.log(midi_freq + " = " + keyb_freq + " durata " + duration[k] + " ON");
+						setTimeout(startPlaying, duration[k]);
+						//setTimeout(console.log(" k = "+k),duration[k]);
+					} else{
+						suona(keyb_freq);
+						console.log(midi_freq + " = " + keyb_freq + " durata " + duration[k] + " ON");
+						setTimeout(startPlaying, duration[k]);
+						//setTimeout(console.log(" k = "+k),duration[k]);
+					}
+					
+				} else{
+					console.log(midi_freq + " = " + keyb_freq + " durata " + duration[k] + " OFF");
+					setTimeout(startPlaying, duration[k]);
+					//setTimeout(console.log(" k = "+k),duration[k]);
+					
+				}
+			k++;
+			}
+		}
+		
+		function suona(freq){
+			c = new AudioContext();
+		    osc = c.createOscillator();
+		    osc.connect(c.destination);
+		    osc.frequency.value = freq;
+		    osc.start();
+		    osc.stop(duration[k]/1000);
+		}
+
+		//harmonization of the note_to_play array with perfect 5th arrays
+		//obtained with a single click on the Harm button
+		document.querySelectorAll("#harm").forEach(toggleHarm5);
+
+		function toggleHarm5(item){
+			item.onclick = perfect5thHarm;
+			clicked = true;
+		}
+
+		//creates an array harm_note_to_play with the perfect 5th with respect to note_to_play
+		function perfect5thHarm(){
+			for (b=0;b<note_array.length;b++){
+				note[b] = min_keyb_freq*Math.pow(2,(note_array[b][1] - min_midi_freq)**1/12);
+				harm_note_to_play_5[b] = note[b]*Math.pow(2,7/12);
+			}
+			return harm_note_to_play_5;
+		}
+
+		//plays the harmonization
+		//PROBLEMA: FUNZIONA SOLO SE SI CLICCA PRIMA HARM POI PLAY
+		function playHarm(freq){
+			var audioCtx = new AudioContext();
+			var o = audioCtx.createOscillator();
+			o.connect(audioCtx.destination);
+			o.frequency.value = freq;  //DICE CHE C'E' UN PROBLEMA
+			o.start();
+			o.stop(duration[k]/1000);
+		}
+
+		//harmonization of the note_to_play array with perfect 4th arrays
+		//obtained with a double click on the Harm button
+		/*document.querySelectorAll("#harm").forEach(toggleHarm4);
+
+		function toggleHarm4(item){
+			item.ondblclick = perfect4thHarm;
+		}
+
+		//creates an array harm_note_to_play with the perfect 4th with respect to note_to_play
+		function perfect4thHarm(){
+			for (a=0;a<note_to_play.length;a++){
+				harm_note_to_play_4[a] = note_to_play[a]*Math.pow(2,5/12);
+				harm_note_to_play_4[a] = harm_note_to_play_4[a].toFixed(3); //ma ritorna stringa e non numeri
+			}
+			return harm_note_to_play_4;
+		}*/
+
+
+	</script>
+</body>
+</html>
