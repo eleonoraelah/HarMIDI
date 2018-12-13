@@ -15,11 +15,10 @@
 		var note_array = new Array;
 		var chord_array = new Array;
 		var block = new Array;
-		var slow_i = 0;
-		var fast_i;
 		var j = 0; 
 		var send=false;
 		var chord = false;
+		var stevenwilson = 0;
 		
 		var pinco = 0;
 		var note_duration = new Array;
@@ -42,14 +41,14 @@
 			console.log(send + " record");
 			if (send){
 				navigator.requestMIDIAccess().then(onMIDISuccess);
-			}
-			else{
+			} else{
 				/*console.log("else");
 				while (j < note_array.length){
 				block[j/10]  = note_array.slice(j,j+10);
 				j = j+10;
 				}*/
 				pinco = i;
+				chordtimebase();
 			}
 		}
 		
@@ -63,9 +62,6 @@
 		    }
 		}
 		
-		var shaiMaestro = 1;
-		var davidelogiri;
-
 		function getMIDIMessage(midiMessage) {
 			message = midiMessage;
 			if (message.data[0] == 155 || message.data[0] == 139){
@@ -87,9 +83,9 @@
 				/*extractData(j,chord_array,chord_time,chord_duration, chordOn);
 				j++;*/
 				chord = true;
-				chord_array[slow_i]=message.data;
-				chord_time[slow_i] = message.timeStamp;
-
+				chord_array[stevenwilson]=message.data;
+				chord_time[stevenwilson] = message.timeStamp;
+/*
 				if (slow_i>0){
 					fast_i = slow_i-1;,
 					davidelogiri = 1;
@@ -109,49 +105,50 @@
 							}
 						}
 					}
-				}
-				slow_i++;
+				}*/
+				stevenwilson++;
 			}
 		}
 
+		var shaiMaestro = 0;
+		var davidelogiri;
+		var slow_i = 1;
+		var fast_i;
+		var min_note;
+		var minNoteDuration = new Array;
 
-/*
-
-
-		function extractData(index, array_type, time_type, duration_type, noteOn_type){
-			array_type[index]=message.data;
-			time_type[index] = message.timeStamp;
-			if (index > 0){
-				if (index == pinco){
-					duration_type[index] = 200; //arbitrary duration
-				} else{
-					duration_type[index] = time_type[index] - time_type[index-1];
+		function chordtimebase(){
+			chord_duration = Array(chord_time.length); //problema: quando rifaccio play dal midi poi mi cancella tutto 
+			//Se io riuscissi a salvarmi la durata delle cose che mi interessano in teoria potrei anche fregarmene 
+			//perchè senza di questo array() non riesco a fare il fill
+			while (slow_i<chord_array.length){
+				fast_i = slow_i-1;
+				davidelogiri = 1;
+				while (fast_i>=0){
+					if (chord_array[fast_i][1] != chord_array[slow_i][1]){
+						min_note = Math.min(chord_array[fast_i][1],chord_array[slow_i][1]); //per trovare la nota minima di cui prendere la durata per fare l'harm
+						fast_i--;
+						davidelogiri++;
+					} else {
+						//chord_duration[slow_i] = chord_time[slow_i]-chord_time[fast_i];
+						chord_duration.fill(chord_time[slow_i] - chord_time[fast_i],slow_i,slow_i + davidelogiri); //facevamo il fill male ahahha
+						chordOn[slow_i] = (chord_array[slow_i][0] < chord_array[fast_i][0]);
+						minNoteDuration[shaiMaestro] = [min_note, chord_time[slow_i] - chord_time[fast_i],chordOn[slow_i]];
+						//nella riga sopra c'è un tentativo vano di salvare nota minima e durata
+						shaiMaestro++;
+						fast_i = -1;
+						slow_i = slow_i+davidelogiri-1;
+						/*
+						while (shaiMaestro<shaiMaestro+davidelogiri){
+							chord_duration[shaiMaestro] = chord_time[slow_i] - chord_time[fast_i];
+							shaiMaestro++;
+						}*/
+					}
 				}
-				noteOn[index] = (array_type[index][0] < array_type[index-1][0]);
-				console.log(noteOn[index] + " " + duration_type[index]);
-				/*
-				//console.log(duration[i]+" durata");
-				if (array_type[index][0] < array_type[index-1][0]){ //139 < 155 the note has been played
-					noteOn_type[index] = true;
-					console.log(duration_type[index]+" durata "+ array_type[index-1][1] + " ON");
-				} else {
-					noteOn_type[index] = false;
-					console.log(duration_type[index]+" durata "+ array_type[index-1][1] + " OFF");
-				}
-				
+				slow_i++;	
 			}
-		}*/
-/* while (j<chord_array.length){
- 	if(chord_array[j][0] == 144){
- 		j++;
- 	}
- 	chord_duration[j] = time[j] - time[j-1];
- 	if (chord_array[j][0] == 128){
- 		j++;
- 	}
- 	chord_duration[j] = time[j] - time[j-1];
- 	j++;
- }*/
+		}
+
 		document.querySelectorAll("#play").forEach(togglePlay);
 		
 		function togglePlay(item){
