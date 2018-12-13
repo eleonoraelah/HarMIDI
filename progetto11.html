@@ -7,8 +7,10 @@
 		<button id="rec">Rec</button>
 		<button id="play">Play</button>
 		<button id="harm">Harm</button>
+		<button id="chords">Chords</button>
 	</div>
 	<script type="text/javascript">
+		
 		var i=0;
 		var note_array = new Array;
 		var chord_array = new Array;
@@ -17,23 +19,24 @@
 		var fast_i;
 		var j = 0; 
 		var send=false;
+		var chord = false;
 		
-		var pinco;
+		var pinco = 0;
 		var note_duration = new Array;
 		var note_time = new Array;
 		var noteOn = new Array;	
-
 		var chord_duration = new Array;
 		var chord_time = new Array;
 		var chordOn = new Array;
-
 		var min_midi_freq = 21;
 		var min_keyb_freq = 27.5;
 
 		document.querySelectorAll("#rec").forEach(toggleRecord);
+		
 		function toggleRecord(item){
 			item.onclick = record;
 		}
+		
 		function record(){
 			send = !send;
 			console.log(send + " record");
@@ -49,7 +52,7 @@
 				pinco = i;
 			}
 		}
-
+		
 		function onMIDISuccess(midiAccess) {
 			console.log(midiAccess);
 		    inputs = midiAccess.inputs;
@@ -59,6 +62,10 @@
 		        input.onmidimessage = getMIDIMessage;
 		    }
 		}
+		
+		var shaiMaestro = 1;
+		var davidelogiri;
+
 		function getMIDIMessage(midiMessage) {
 			message = midiMessage;
 			if (message.data[0] == 155 || message.data[0] == 139){
@@ -79,24 +86,38 @@
 			} else if (message.data[0] == 144 || message.data[0] == 128){
 				/*extractData(j,chord_array,chord_time,chord_duration, chordOn);
 				j++;*/
+				chord = true;
 				chord_array[slow_i]=message.data;
 				chord_time[slow_i] = message.timeStamp;
+
 				if (slow_i>0){
-					fast_i = slow_i-1;
-					while (fast_i>0){
+					fast_i = slow_i-1;,
+					davidelogiri = 1;
+					while (fast_i>=0){
 						if (chord_array[fast_i][1] != chord_array[slow_i][1]){
 							fast_i--;
+							davidelogiri++;
 						} else {
-							chord_duration[slow_i] = chord_time[slow_i]-chord_time[fast_i];
+							//chord_duration[slow_i] = chord_time[slow_i]-chord_time[fast_i];
+							chord_duration[shaiMaestro].fill(chord_time[slow_i] - chord_time[fast_i], davidelogiri);
 							chordOn[slow_i] = (chord_array[slow_i][0] < chord_array[fast_i][0]);
-							fast_i = 0;
+							fast_i = -1;
+							
+							while (shaiMaestro<shaiMaestro+davidelogiri){
+								chord_duration[shaiMaestro] = chord_time[slow_i] - chord_time[fast_i];
+								shaiMaestro++;
+							}
 						}
 					}
 				}
 				slow_i++;
 			}
 		}
+
+
 /*
+
+
 		function extractData(index, array_type, time_type, duration_type, noteOn_type){
 			array_type[index]=message.data;
 			time_type[index] = message.timeStamp;
@@ -120,11 +141,8 @@
 				
 			}
 		}*/
-
-
 /* while (j<chord_array.length){
  	if(chord_array[j][0] == 144){
-
  		j++;
  	}
  	chord_duration[j] = time[j] - time[j-1];
@@ -134,16 +152,15 @@
  	chord_duration[j] = time[j] - time[j-1];
  	j++;
  }*/
-
-
-
-
 		document.querySelectorAll("#play").forEach(togglePlay);
+		
 		function togglePlay(item){
 			item.onclick = startplaying;
 		}
+		
 		var k = 1;
 		var c;
+		
 		function startplaying(){
 			//if (k<noteOn.length){
 			if (k<note_array.length){
@@ -151,26 +168,60 @@
 				keyb_freq = min_keyb_freq*Math.pow(2,(midi_freq - min_midi_freq)**1/12);
 				if (noteOn[k]){
 					suona(keyb_freq);
-					console.log(midi_freq + " = " + keyb_freq + " durata " + duration[k] + " ON");
-					setTimeout(startplaying, duration[k]);
+					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " ON");
+					setTimeout(startplaying, note_duration[k]);
 					//setTimeout(console.log(" k = "+k),duration[k]);
 				} else{
-					console.log(midi_freq + " = " + keyb_freq + " durata " + duration[k] + " OFF");
-					setTimeout(startplaying, duration[k]);
+					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " OFF");
+					setTimeout(startplaying, note_duration[k]);
 					//setTimeout(console.log(" k = "+k),duration[k]);
 					
 				}
 			k++;
 			}
 		}
+
 		function suona(freq){
 			c = new AudioContext();
 		    osc = c.createOscillator();
 		    osc.connect(c.destination);
 		    osc.frequency.value = freq;
 		    osc.start();
-		    osc.stop(duration[k]/1000);
+		    osc.stop(note_duration[k]/1000);
 		}
+
+		var e = 0;
+		while (e < chord_array.length){
+			block[e/5]  = chord_array.slice(e,e+5);
+			e = e+5;
+		}
+			//return block;
+
+		//createBlocks();
+
+		/*document.querySelectorAll("#chords").forEach(togglePlayChords);
+		
+		function togglePlayChords(item){
+			item.onclick = startPlayingChords;
+		}
+
+		function startPlayingChords(){
+			for (var c=0;c<chord_array.length;c++){
+				playChord(chord_array[c][1],chord_duration[k]);
+			}
+		}
+
+		function playChord(array,dur){
+			audioCtx = new AudioContext();
+			osc_chord = audioCtx.createOscillator();
+			osc_chord.connect(audioCtx.destination);
+			osc_chord.frequency.value = array[k];
+			osc_chord.start();
+			osc_chord.stop(dur/1000);
+		}*/
+
+
+
 	</script>
 </body>
 </html>
