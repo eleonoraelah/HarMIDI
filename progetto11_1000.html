@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+	<div>
+		<button id="rec">Rec</button>
+		<button id="play">Play</button>
+		<button id="harm">Harm</button>
+	</div>
+	<script type="text/javascript">
+		
+		var i = 0;
+		var note_array = new Array;
+		var chord_array = new Array;
+		var block = new Array;
+		var j = 0; 
+		var j_eq;
+		var jj = 0;
+		var jjj;
+		var send = false;
+		
+		var counter = 1;
+		var note_duration = new Array;
+		var note_time = new Array;
+		var noteOn = new Array;	
+		var chord_duration = new Array;
+		var chord_time = new Array;
+		var chordOn = new Array;
+		var min_midi_freq = 21;
+		var min_keyb_freq = 27.5;
+
+		document.querySelectorAll("#rec").forEach(toggleRecord);
+		
+		function toggleRecord(item){
+			item.onclick = record;
+		}
+		
+		function record(){
+			send = !send;
+			console.log(send + " record");
+			if (send){
+				navigator.requestMIDIAccess().then(onMIDISuccess);
+			}
+			else{
+				/*console.log("else");
+				while (j < note_array.length){
+				block[j/10]  = note_array.slice(j,j+10);
+				j = j+10;
+				}*/
+				counter = i;
+			}
+		}
+		
+		function onMIDISuccess(midiAccess) {
+			console.log(midiAccess);
+		    inputs = midiAccess.inputs;
+		    outputs = midiAccess.outputs;
+		    
+		    for (var input of midiAccess.inputs.values()){
+		        input.onmidimessage = getMIDIMessage;
+		    }
+		}
+
+		function getMIDIMessage(midiMessage) {
+			message = midiMessage;
+			
+			if (message.data[0] == 155 || message.data[0] == 139){ //message from channel 12 (MELODY)
+				note_array[i] = message.data;
+				note_time[i] = message.timeStamp;
+				getDurationNotes();
+				i++;
+			} else if (message.data[0] == 144 || message.data[0] == 128){ //message from channel 1 (CHORDS)
+				chord_array[i]=message.data;
+				chord_time[i] = message.timeStamp;
+				getDurationChords();
+				i++;
+			}
+			
+			/*for (i=1;i<note_array.length;i++){
+				noteOn[i] = (note_array[i][0] < note_array[i-1][0]);
+				console.log(noteOn[i] + " " + note_duration[i]);
+			}*/
+		}
+
+		function getDurationNotes(){
+			if (i == 0){				
+				note_duration[i] = 200; //arbitrary duration of 200 ms
+			} else {
+				note_duration[i] = note_time[i] - note_time[i-1];
+			}
+		}
+
+		/*function getDurationChords(){ 
+			chord_duration[0] = 200; //arbitrary duration of 200 ms
+			if (chord_array[j_eq-1][0] == 144){
+				while (chord_array[j_eq][0] == 144){
+					counter++;
+					j_eq++;
+				}
+				while (jj<counter){
+					chord_duration[jj] = chord_time[j_eq] - chord_time[j_eq-1];
+					jj++;
+				}
+			}
+			if (chord_array[j_eq-1][0] == 128){
+				while (chord_array[j_eq][0] == 128){
+					counter++;
+					j_eq++;
+				}
+				while (jj<counter){
+					chord_duration[jj] = chord_time[j_eq] - chord_time[j_eq-1];
+					jj++;
+				}
+			}
+			return chord_duration;
+		}*/
+
+		function getDurationChords(){
+			if (i == 0){
+				chord_duration[0] = 200;
+			} else if (i>0){
+				if (i<chord_array.length){
+					jjj = i; //13
+					if (chord_array[i][0] == chord_array[i-1][0]){
+						counter++; //4
+						//i++;   //16
+					}
+					/*while (jj<jjj+counter-1){ //12-->15
+						block[jj] = chord_array.slice(jjj-1,jjj+counter-1); //12-->15
+						chord_duration[jj] = chord_time[i] - chord_time[i-1];
+						jj++;
+					} //jj=16
+					i++; //17
+					counter = 1;*/
+				}
+			}
+			//return chord_duration;
+		}
+	
+		document.querySelectorAll("#play").forEach(togglePlay);
+		
+		function togglePlay(item){
+			item.onclick = startplaying;
+		}
+		
+		var k = 1;
+		var c;
+		
+		function startplaying(){
+			//if (k<noteOn.length){
+			if (k<note_array.length){
+				midi_freq = note_array[k-1][1] // midi freq of the note being played
+				keyb_freq = min_keyb_freq*Math.pow(2,(midi_freq - min_midi_freq)**1/12);
+				if (noteOn[k]){
+					suona(keyb_freq);
+					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " ON");
+					setTimeout(startplaying, note_duration[k]);
+					//setTimeout(console.log(" k = "+k),duration[k]);
+				} else{
+					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " OFF");
+					setTimeout(startplaying, note_duration[k]);
+					//setTimeout(console.log(" k = "+k),duration[k]);
+					
+				}
+			k++;
+			}
+		}
+
+		function suona(freq){
+			c = new AudioContext();
+		    osc = c.createOscillator();
+		    osc.connect(c.destination);
+		    osc.frequency.value = freq;
+		    osc.start();
+		    osc.stop(note_duration[k]/1000);
+		}
+
+		/*var e = 0;
+		while (e < chord_array.length){
+			block[e/5]  = chord_array.slice(e,e+5);
+			e = e+5;
+		}*/
+
+	</script>
+</body>
+</html>
