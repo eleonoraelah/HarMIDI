@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+	<div>
+		<button id="rec">Rec</button>
+		<button id="play">Play</button>
+		<button id="harm">Harm</button>
+	</div>
+	<script type="text/javascript">
+		
+		var i = 0;
+		var note_array = new Array;
+		var chord_array = new Array;
+		var block = new Array;
+		var j = 0; 
+		//var j_eq;
+		//var jj = 0;
+		//var jjj;
+		var m = 1;
+		var send = false;
+		var counter = 1;
+
+		var note_duration = new Array;
+		var note_time = new Array;
+		var noteOn = new Array;	
+		var chord_duration = new Array;
+		var chord_time = new Array;
+		var chordOn = new Array;
+		var num_note = new Array;
+		var min_midi_freq = 21;
+		var min_keyb_freq = 27.5;
+
+		document.querySelectorAll("#rec").forEach(toggleRecord);
+		
+		function toggleRecord(item){
+			item.onclick = record;
+		}
+		
+		function record(){
+			send = !send;
+			console.log(send + " record");
+			if (send){
+				navigator.requestMIDIAccess().then(onMIDISuccess);
+			}
+			else{
+				/*console.log("else");
+				while (j < note_array.length){
+				block[j/10]  = note_array.slice(j,j+10);
+				j = j+10;
+				}*/
+				//counter = i;
+				getMinNote();
+			}
+		}
+		
+		function onMIDISuccess(midiAccess) {
+			console.log(midiAccess);
+		    inputs = midiAccess.inputs;
+		    outputs = midiAccess.outputs;
+		    
+		    for (var input of midiAccess.inputs.values()){
+		        input.onmidimessage = getMIDIMessage;
+		    }
+		}
+
+		function getMIDIMessage(midiMessage) {
+			message = midiMessage;
+			
+			if (message.data[0] == 155 || message.data[0] == 139){ //message from channel 12 (MELODY)
+				note_array[i] = message.data;
+				note_time[i] = message.timeStamp;
+				getDurationNotes();
+				i++;
+			} else if (message.data[0] == 144 || message.data[0] == 128){ //message from channel 1 (CHORDS)
+				chord_array[j] = message.data;
+				chord_time[j] = message.timeStamp;
+				j++;
+			}
+		}
+
+		function getDurationNotes(){
+			if (i == 0){				
+				note_duration[i] = 200; //arbitrary duration of 200 ms
+			} else {
+				note_duration[i] = note_time[i] - note_time[i-1];
+				noteOn[i] = (note_array[i][0] < note_array[i-1][0]);
+				console.log(noteOn[i] + " " + note_duration[i]);
+			}
+		}
+
+		//how many chords played 
+		var n = 0;
+		var min_note;
+		var min_note_index = 0;
+		var shaiMaestro = new Array; //array che contiene i dati delle note minime di ogni accordo e il loro tempo
+		var s_m = 0;
+
+		function getMinNote(){
+			min_note = chord_array[0][1];
+			while (m<chord_array.length){
+				if (chord_array[m][0] == chord_array[m-1][0]){
+					if (Math.min(min_note, chord_array[m][1]) == chord_array[m][1]){
+						min_note = chord_array[m][1];
+						min_note_index = m; 
+						
+					}
+					console.log("min_note="+min_note+" m="+m);
+					console.log("min_note_index="+min_note_index);
+					m++;
+				}
+				else {
+					shaiMaestro[s_m] = [chord_array[min_note_index],chord_time[min_note_index]];
+					s_m++;
+					m++;
+					min_note = chord_array[m-1][1];
+					min_note_index = m-1;
+				} 
+			}
+			shaiMaestro[s_m] = [chord_array[min_note_index],chord_time[min_note_index]];
+			getDurationChord();
+		}
+
+		var u;
+		function getDurationChord(){
+			chord_duration[0] = 200;
+			for (u=1;u<shaiMaestro.length;u++){
+				chord_duration[u] = shaiMaestro[u][1] - shaiMaestro[u-1][1];
+			}
+			MinNoteFreq();
+		}
+
+		var a = 0;
+		var keyb_chord_freq = new Array;
+		var min_chord = new Array;
+
+		//saves in keyb_chord_freq the frequency associated with the minimum midi notes
+		function MinNoteFreq(){
+			while (a<shaiMaestro.length){
+				min_chord[a] = shaiMaestro[a][0][1] // midi freq of the note being played
+				keyb_chord_freq[a] = min_keyb_freq*Math.pow(2,(min_chord[a] - min_midi_freq)**1/12);
+				a++;
+			}
+		}
+
+		/*var ctp_vector = new Array;
+		var ctp_index_first = 0;
+		var ctp_index_second = 1;
+
+		function createHarmonization(){
+			while (ctp_index<shaiMaestro.length){
+				while(ctp_index_second<shaiMaestro.length){
+					ctp_vector[ctp_index_second] = keyb_chord_freq[ctp_index_first]*Math.random()
+				}
+				ctp_index++;
+			}
+		}*/
+
+		document.querySelectorAll("#play").forEach(togglePlay);
+		
+		function togglePlay(item){
+			item.onclick = startplaying;
+		}
+		
+		var k = 1;
+		var c;
+		
+		function startplaying(){
+			//if (k<noteOn.length){
+			if (k<note_array.length){
+				midi_freq = note_array[k-1][1] // midi freq of the note being played
+				keyb_freq = min_keyb_freq*Math.pow(2,(midi_freq - min_midi_freq)**1/12);
+				if (noteOn[k]){
+					suona(keyb_freq);
+					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " ON");
+					setTimeout(startplaying, note_duration[k]);
+					//setTimeout(console.log(" k = "+k),duration[k]);
+				} else{
+					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " OFF");
+					setTimeout(startplaying, note_duration[k]);
+					//setTimeout(console.log(" k = "+k),duration[k]);
+					
+				}
+			k++;
+			}
+		}
+
+		function suona(freq){
+			c = new AudioContext();
+		    osc = c.createOscillator();
+		    osc.connect(c.destination);
+		    osc.frequency.value = freq;
+		    osc.start();
+		    osc.stop(note_duration[k]/1000);
+		}
+
+		//harmonization of the main melody using the "second species in two voices" counterpoint rule
+		//the idea is to have two ctp notes for each one of the cf notes, following this rule:
+		//the first note MUST be CONSONANT (one among the 1st,3rd,5th,6th or 8th)
+		//the 2nd note is allowed to be DISSONANT
+
+
+
+
+	</script>
+</body>
+</html>
+
+
