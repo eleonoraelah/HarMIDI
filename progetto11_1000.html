@@ -28,6 +28,8 @@
 		var chord_duration = new Array;
 		var chord_time = new Array;
 		var chordOn = new Array;
+		var davidelogiri = 0;
+		var stevenwilson = 0;
 		var num_note = new Array;
 		var min_midi_freq = 21;
 		var min_keyb_freq = 27.5;
@@ -51,7 +53,10 @@
 				j = j+10;
 				}*/
 				//counter = i;
-				getMinNote();
+				davidelogiri = i;
+				stevenwilson = j;
+				makeChordDuration();
+				//getMinNote();
 			}
 		}
 		
@@ -71,7 +76,7 @@
 			if (message.data[0] == 155 || message.data[0] == 139){ //message from channel 12 (MELODY)
 				note_array[i] = message.data;
 				note_time[i] = message.timeStamp;
-				getDurationNotes();
+				getDurationNotes(i, note_array, note_time, note_duration, noteOn, davidelogiri);
 				i++;
 			} else if (message.data[0] == 144 || message.data[0] == 128){ //message from channel 1 (CHORDS)
 				chord_array[j] = message.data;
@@ -86,14 +91,16 @@
 		}
 		//notePerChord(chord_array);
 
-		function getDurationNotes(){
-			if (i == 0){				
-				note_duration[i] = 200; //arbitrary duration of 200 ms
-			} else {
-				note_duration[i] = note_time[i] - note_time[i-1];
+		function getDurationNotes(index, array_type, time_type, duration_type, noteOn_type, last_note){
+			if (index>0){
+				if (index == last_note){				
+					duration_type[index] = 200; //arbitrary duration of 200 ms
+				} else {
+					duration_type[index] = time_type[index] - time_type[index-1];
+				}
+				noteOn_type[index] = (array_type[index][0] < array_type[index-1][0]);
+				//console.log(noteOn_type[index] + " " + duration_type[index]);
 			}
-			noteOn[i] = (note_array[i][0] < note_array[i-1][0]);
-			console.log(noteOn[i] + " " + note_duration[i]);
 		}
 
 		//quanti accordi suonano eda quante note sono formati
@@ -112,8 +119,8 @@
 						min_note_index = m; 
 						
 					}
-					console.log("min_note="+min_note+" m="+m);
-					console.log("min_note_index="+min_note_index);
+					//console.log("min_note="+min_note+" m="+m);
+					//console.log("min_note_index="+min_note_index);
 					m++;
 				}
 				else {
@@ -125,6 +132,13 @@
 				} 
 			}
 			shaiMaestro[s_m] = [chord_array[min_note_index],chord_time[min_note_index]];
+		}
+
+		function makeChordDuration(){
+			getMinNote();
+			for (var chord_i = 1; chord_i<j; chord_i++){
+				getDurationNotes(chord_i, shaiMaestro[chord_i][0], shaiMaestro[chord_i][1], chord_duration, chordOn, stevenwilson);
+			}
 		}
 	
 		document.querySelectorAll("#play").forEach(togglePlay);
