@@ -144,10 +144,12 @@
 		}
 */
 
-	
-		var harm_array = new Array;
+		var harmOn = new Array;
 		var dur_harm = new Array;
 		var harm_i;
+		var harm_notes = new Array;
+		var cons_notes = [1,3,5,6,8];
+		var diss_notes = [2,4,7];
 
 		function makeChordDuration(){
 			getMinNote();
@@ -156,8 +158,14 @@
 				getDurationNotes(chord_i, shaiMaestro, avishaiCohen, chord_duration, chordOn, stevenwilson);
 				harm_i = chord_i * 2 - 1;
 				dur_harm.fill(chord_duration[chord_i]/2,harm_i,harm_i+2);
+				harm_notes[harm_i] = shaiMaestro[chord_i][1] + cons_notes[Math.floor(Math.random() * cons_notes.length)] - 1;
+				harmOn[harm_i] = chordOn[chord_i];
+				harm_notes[harm_i+1] = shaiMaestro[chord_i][1] + diss_notes[Math.floor(Math.random() * diss_notes.length)] - 1;
+				harmOn[harm_i+1] = chordOn[chord_i];
 			}
 			console.log(dur_harm);
+			console.log(harm_notes);
+			console.log(harmOn);
 		}
 /*
 		function durationHarm(){
@@ -204,40 +212,6 @@
 		    osc.start();
 		    osc.stop(note_duration[k]/1000);
 		}
-
-		/*var e = 0;
-		while (e < chord_array.length){
-			block[e/5]  = chord_array.slice(e,e+5);
-			e = e+5;
-		}*/
-
-
-
-		/*function getDurationChords(){ 
-			chord_duration[0] = 200; //arbitrary duration of 200 ms
-			if (chord_array[j_eq-1][0] == 144){
-				while (chord_array[j_eq][0] == 144){
-					counter++;
-					j_eq++;
-				}
-				while (jj<counter){
-					chord_duration[jj] = chord_time[j_eq] - chord_time[j_eq-1];
-					jj++;
-				}
-			}
-			if (chord_array[j_eq-1][0] == 128){
-				while (chord_array[j_eq][0] == 128){
-					counter++;
-					j_eq++;
-				}
-				while (jj<counter){
-					chord_duration[jj] = chord_time[j_eq] - chord_time[j_eq-1];
-					jj++;
-				}
-			}
-			return chord_duration;
-		}*/
-
 
 	</script>
 </body>
