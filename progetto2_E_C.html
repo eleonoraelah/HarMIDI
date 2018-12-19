@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+</head>
+<body>
+	<div>
+		<button id="rec_button">Rec</button>
+		<button id="play_button">Play</button>
+		<button id="harm_button">Harm</button>
+		<button id="play_all">Play all</button>
+	</div>
+	<script type="text/javascript">
+		
+		var i = 0;
+		var note_array = new Array;
+		var chord_array = new Array;
+		var j = 0; 
+		var m = 1;
+		var send = false;
+		var counter; //ex francoispachet
+
+		var note_duration = new Array;
+		var note_time = new Array;
+		var noteOn = new Array;	
+		var chord_duration = new Array;
+		var chord_time = new Array;
+		var chordOn = new Array;
+		var last_note_index = 0; //ex davidelogiri
+		var last_chord_index = 0; //stevenwilson
+		var num_note = new Array;
+		var min_midi_freq = 21;
+		var min_keyb_freq = 27.5;
+
+		document.querySelectorAll("#rec_button").forEach(toggleRecord);
+		
+		function toggleRecord(item){
+			item.onclick = record;
+		}
+		
+		function record(){
+			send = !send;
+			console.log(send + " record");
+			if (send){
+				navigator.requestMIDIAccess().then(onMIDISuccess);
+				counter = s_m;
+			}
+			else{
+				last_note_index = i;
+				//stevenwilson = j;
+				getChordDuration();
+				s_m++;
+				last_chord_index = s_m;
+				createFirstSpeciesCtp();
+				//getMinNote();
+			}
+		}
+		
+		function onMIDISuccess(midiAccess) {
+			console.log(midiAccess);
+		    inputs = midiAccess.inputs;
+		    outputs = midiAccess.outputs;
+		    
+		    for (var input of midiAccess.inputs.values()){
+		        input.onmidimessage = getMIDIMessage;
+		    }
+		}
+
+		function getMIDIMessage(midiMessage) {
+			message = midiMessage;
+			
+			if (message.data[0] == 155 || message.data[0] == 139){ //message from channel 12 (MELODY)
+				note_array[i] = message.data;
+				note_time[i] = message.timeStamp;
+				getDurationNotes(i, note_array, note_time, note_duration, noteOn, last_note_index);
+				i++;
+			} else if (message.data[0] == 144 || message.data[0] == 128){ //message from channel 1 (CHORDS)
+				chord_array[j] = message.data;
+				chord_time[j] = message.timeStamp;
+				j++;
+			}
+		}
+
+		function getDurationNotes(index, array_type, time_type, duration_type, noteOn_type, last_note){
+			if (index == 0){ //SERVE NEL CASO IN CUI ACCORDI E MELODIA NON PARTONO NELLO STESSO ISTANTE, NEL MOMENTO IN CUI IO DEVO FARLE SUONARE INSIEME
+				duration_type[index] = time_type[index];
+				if (array_type[index][0] == 139){noteOn[index] = true;}
+				else{noteOn[index] = false;} 
+			}
+			if (index>0){
+				if (index == last_note){				
+					duration_type[index] = 200; //arbitrary duration of 200 ms
+					console.log("last_chord_index = "+ last_chord_index);
+				} else {
+					duration_type[index] = time_type[index] - time_type[index-1];
+				}
+				noteOn_type[index] = (array_type[index][0] < array_type[index-1][0]);
+			}
+		}
+
+		//quanti accordi suonano
+		var n = 0;
+		var min_note;
+		var min_note_index = 0;
+		var min_note_array = new Array; //array che contiene i dati delle note minime di ogni accordo EX SHAIMAESTRO
+		var min_note_time = new Array;  //array che contiene le informazioni temporali di ogni minima nota EX AVISHAICOHEN
+		var s_m = 0;
+
+		function getMinNote(){
+			min_note = chord_array[0][1];
+			while (m<chord_array.length){
+				if (chord_array[m][0] == chord_array[m-1][0]){
+					if (Math.min(min_note, chord_array[m][1]) == chord_array[m][1]){
+						min_note = chord_array[m][1];
+						min_note_index = m; 
+					}
+					m++;
+				}
+				else {
+					min_note_array[s_m] = chord_array[min_note_index];
+					min_note_time[s_m] = chord_time[min_note_index];
+					s_m++;
+					m++;
+					min_note = chord_array[m-1][1];
+					min_note_index = m-1;
+				} 
+			}
+			min_note_array[s_m] = chord_array[min_note_index];
+			min_note_time[s_m] = chord_time[min_note_index];
+		}
+
+
+		var harmOn = new Array;
+		var dur_harm = new Array;
+		var harm_i;
+		var harm_notes = new Array;
+		//var cons_notes = [1,3,5,6,8];
+		var cons_notes = [0,4,7,9,12];
+		//var diss_notes = [2,4,7];
+		var diss_notes = [0,1,2,3,4,5,6,8,9,10,11,12];
+		//var dur_harm_longer = new Array;
+
+		function getChordDuration(){
+			getMinNote();
+			dur_harm = dur_harm.concat(Array((min_note_array.length-counter)*2 - 1));
+			for (var chord_i = 1; chord_i<min_note_array.length; chord_i++){
+				getDurationNotes(chord_i, min_note_array, min_note_time, chord_duration, chordOn, last_chord_index);
+				harm_i = chord_i * 2 - 1;
+				dur_harm.fill(chord_duration[chord_i]/2,harm_i,harm_i+2);
+				harm_notes[harm_i] = min_note_array[chord_i][1] + cons_notes[Math.floor(Math.random() * cons_notes.length)];
+				harmOn[harm_i] = chordOn[chord_i];
+				harm_notes[harm_i+1] = min_note_array[chord_i][1] + diss_notes[Math.floor(Math.random() * diss_notes.length)];
+				harmOn[harm_i+1] = chordOn[chord_i];
+			}
+			/*for (i=1;i<dur_harm.length;i++){
+				dur_harm_longer[i] = dur_harm[i]*5;
+			}
+
+			for (i=1;i<chord_duration.length;i++){
+				chord_duration_longer[i] = chord_duration[i]*5;
+			}*/
+
+			console.log(dur_harm);
+			console.log(harm_notes);
+			console.log(harmOn);
+		}
+
+		var ctp_vector = new Array;
+		var ctp_index = 0;
+
+		function createFirstSpeciesCtp(){
+			while (ctp_index<min_note_array.length){
+				ctp_vector[ctp_index] = min_note_array[ctp_index][1] + cons_notes[Math.floor(Math.random() * cons_notes.length)];
+				ctp_index++;
+			}
+			return ctp_vector;
+		}
+	
+		document.querySelectorAll("#play_button").forEach(togglePlay);
+		
+		function togglePlay(item){
+			item.onclick = startPlaying;
+		}
+		
+		//var k = 1;
+		var k = 0;
+
+		function startPlaying(){
+			//if (k<noteOn.length){
+			if (k == counter){
+				setTimeout(startPlaying,note_duration[k]);
+				console.log("k = 0 --> " + note_duration[k]);
+				k++;
+			}
+			if (k>0 && k<note_array.length){
+				//midi_freq = note_array[k-1][1] // midi freq of the note being played
+				midi_freq = note_array[k][1]
+				keyb_freq = min_keyb_freq*Math.pow(2,(midi_freq - min_midi_freq)**1/12);
+				if (noteOn[k]){
+					playMelody(keyb_freq);
+					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " ON");
+					setTimeout(startPlaying, note_duration[k]);
+					//setTimeout(console.log(" k = "+k),duration[k]);
+				} else{
+					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " OFF");
+					setTimeout(startPlaying, note_duration[k]);
+					//setTimeout(console.log(" k = "+k),duration[k]);
+					
+				}
+			k++;
+			}
+		}
+
+
+		var g = 0;
+		var g_harmOn = 1;
+		var midi_chord_freq;
+		var keyb_chord_freq;
+
+		function startPlayingMinNotes(){
+			if (g<min_note_array.length){
+				midi_chord_freq = min_note_array[g][1];
+				keyb_chord_freq = min_keyb_freq*Math.pow(2,(midi_chord_freq - min_midi_freq)**1/12);
+				if (g == 0){
+					setTimeout(startPlayingFirstCtp,chord_duration[g]);
+				}
+				else if (g>0 && harmOn[g_harmOn]){
+					playMinNote(keyb_chord_freq);
+					console.log("keyb_chord_freq = " + keyb_chord_freq + " chord_duration = " + chord_duration[g] + " ON");
+					setTimeout(startPlayingMinNotes,chord_duration[g]);
+				} else {
+					console.log("keyb_chord_freq = " + keyb_chord_freq + " chord_duration = " + chord_duration[g] + " OFF");
+					setTimeout(startPlayingMinNotes,chord_duration[g]);
+				}
+				g++;
+				g_harmOn = 2*g + 1;
+			}
+		}
+
+
+		document.querySelectorAll("#harm_button").forEach(toggleHarm);
+		
+		function toggleHarm(item){
+			//item.onclick = startPlayingCtp;
+			item.onclick = startPlayingMinNotes;
+			//item.onclick = startPlayingFirstCtp;
+		}
+
+
+		var ctp = 0;
+		var midi_first_ctp;
+		var keyb_first_ctp;
+
+		function startPlayingFirstCtp(){
+			if (ctp<ctp_vector.length){
+				midi_first_ctp = ctp_vector[ctp];
+				keyb_first_ctp = min_keyb_freq*Math.pow(2,(midi_first_ctp - min_midi_freq)**1/12);
+				
+				if (ctp == 0){
+					setTimeout(startPlayingFirstCtp,chord_duration[ctp]);
+				}
+				else if (ctp>0 && chordOn[ctp] == true){
+					playFirstCtp(keyb_first_ctp);
+					console.log("keyb_first_ctp = " + keyb_first_ctp + " chord_duration = " + chord_duration[ctp] + " ON");
+					setTimeout(startPlayingFirstCtp,chord_duration[ctp]);
+				}
+				else {
+					console.log("keyb_first_ctp = " + keyb_first_ctp + " chord_duration = " + chord_duration[ctp] + " OFF");
+					setTimeout(startPlayingFirstCtp,chord_duration[ctp]);
+				}
+				ctp++;
+			}
+		}
+
+		var audioC;
+		function playFirstCtp(freq){
+			audioC = new AudioContext();
+			osc_ctp = audioC.createOscillator();
+			osc_ctp.connect(audioC.destination);
+			osc_ctp.frequency.value = freq;
+			osc_ctp.start();
+			osc_ctp.stop(chord_duration[ctp]/1000);
+		}
+
+		/*
+
+		var h = 1;
+		var midi_ctp_freq;
+		var keyb_ctp_freq;
+
+		function startPlayingCtp(){
+			if (h<harm_notes.length){
+				midi_ctp_freq = harm_notes[h];
+				keyb_ctp_freq = min_keyb_freq*Math.pow(2,(midi_ctp_freq - min_midi_freq)**1/12);
+				if (harmOn[h]){
+					playCtpNotes(midi_ctp_freq);
+					console.log("keyb_ctp_freq = " + keyb_ctp_freq + " harm_duration = " + dur_harm[h] + " ON");
+					setTimeout(startPlayingCtp,dur_harm[h]);
+				} else {
+					console.log("keyb_ctp_freq = " + keyb_ctp_freq + " harm_duration = " + dur_harm[h] + " OFF");
+					setTimeout(startPlayingCtp,dur_harm[h]);
+				}
+				h++;
+			}
+		} */
+
+		document.querySelectorAll("#play_all").forEach(togglePlayAll);
+
+		function togglePlayAll(item){
+			item.onclick = playAllTogether;
+		}
+
+		function playAllTogether(){
+			//playFirstCtp(keyb_first_ctp);			
+			//playMinNote(keyb_chord_freq);
+			startPlayingFirstCtp();
+			startPlayingMinNotes();
+			//console.log("STO SUONANDO QUESTE NOTE");
+		}
+
+
+		var c;
+		var osc;
+		function playMelody(freq){
+			c = new AudioContext();
+		    osc = c.createOscillator();
+		    osc.connect(c.destination);
+		    osc.frequency.value = freq;
+		    osc.start();
+		    osc.stop(note_duration[k]/1000);
+		}
+
+
+		var context;
+		var osc_chord;
+		function playMinNote(freq){
+			context = new AudioContext();
+			osc_chord = context.createOscillator();
+			osc_chord.connect(context.destination);
+			osc_chord.frequency.value = freq;
+			osc_chord.start();
+			osc_chord.stop(chord_duration[g]/1000);
+		}
+
+		var ctx;
+		var osc_harm;
+		function playCtpNotes(freq){
+			ctx = new AudioContext();
+			osc_harm = ctx.createOscillator();
+			osc_harm.connect(ctx.destination);
+			osc_harm.frequency.value = freq;
+			osc_harm.start();
+			osc_harm.stop(dur_harm[h]/1000);
+		}
+
+
+	</script>
+</body>
+</html>
+
+
