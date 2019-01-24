@@ -202,7 +202,7 @@
 		function getMIDIMessage(midiMessage) {
 			message = midiMessage;
 			
-			if (message.data[0] == 147 || message.data[0] == 131){ //message from channel 12 (MELODY)
+			if (message.data[0] == 155 || message.data[0] == 139){ //message from channel 12 (MELODY)
 				note_array[i] = message.data;
 				note_time[i] = message.timeStamp;
 				//getDurationNotes(i, note_array, note_time, note_duration, noteOn, last_note_index);
@@ -288,9 +288,9 @@
 		var harm_i;
 		var harm_notes = new Array;
 		//var cons_notes = [1,3,5,6,8];
-		var cons_notes = [0,4,7,9,12]; // Chiedere a Cecilia
+		var cons_notes = [4,7,9,12]; 
 		//var diss_notes = [2,4,7];
-		var diss_notes = [0,1,2,3,4,5,6,8,9,10,11,12];
+		var diss_notes = [1,2,3,4,5,6,8,9,10,11];
 		//var dur_harm_longer = new Array;
 
 		function getChordDuration(){
@@ -365,14 +365,14 @@
 				if(noteOn[k]){ // POSSIAMO PARTIRE DA ZERO A QUESTO PUNTO
 					playMelody(keyb_freq);
 					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " ON");
-					setTimeout(startPlaying, note_duration[k]);
 					//setTimeout(console.log(" k = "+k),duration[k]);
 				} else{
 					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " OFF");
-					setTimeout(startPlaying, note_duration[k]);
+					//setTimeout(startPlaying, note_duration[k]);
 					//setTimeout(console.log(" k = "+k),duration[k]);
 					
 				}
+				setTimeout(startPlaying, note_duration[k]);
 				k++;
 			}
 		}
@@ -407,97 +407,121 @@
 					g++;
 				}*/
 				//if (g>0 && chordOn[g]==true){
-				if (chordOn[g]==true){
-					playMinNote(keyb_chord_freq);
-					playFirstCtp(keyb_first_ctp);
-					console.log("keyb_chord_freq = " + keyb_chord_freq + " chord_duration = " + chord_duration[g] + " ON"+ " g= " +g);
-					console.log("keyb_ctp_freq = " + keyb_first_ctp + " chord_duration = " + chord_duration[g] + " ON"+ " g= " +g);
-					setTimeout(startPlayingChords,chord_duration[g]);
-					g++;
+				if (chordOn[g]){
+					startOscillators(keyb_chord_freq,keyb_first_ctp);
+					
 				} else {
 					console.log("keyb_chord_freq = " + keyb_chord_freq + " chord_duration = " + chord_duration[g] + " OFF"+ " g= " +g);
 					console.log("keyb_ctp_freq = " + keyb_first_ctp + " chord_duration = " + chord_duration[g] + " OFF"+ " g= " +g);
-					setTimeout(startPlayingChords,chord_duration[g]);
-					g++;
+					//setTimeout(startPlayingChords,chord_duration[g]);
 				}
-			}
-		}
-
-		//var ctp = 1;
-		var ctp = 0;
-		var midi_first_ctp;
-		var keyb_first_ctp;
-
-		function startPlayingFirstCtp(){
-			if (ctp<ctp_vector.length){
-				midi_first_ctp = ctp_vector[ctp];
-				keyb_first_ctp = min_keyb_freq*Math.pow(2,(midi_first_ctp - min_midi_freq)**1/12);
-				/*
-				if (ctp == 0){
-					setTimeout(startPlayingFirstCtp,chord_duration[ctp]);
-				}
-				if (ctp>0 && ctpOn[ctp] == true){*/
-				if(ctpOn[ctp]){
-					playFirstCtp(keyb_first_ctp);
-					console.log("keyb_first_ctp = " + keyb_first_ctp + " chord_duration = " + chord_duration[ctp] + " ON");
-					setTimeout(startPlayingFirstCtp,chord_duration[ctp]);
-				}
-				else {
-					console.log("keyb_first_ctp = " + keyb_first_ctp + " chord_duration = " + chord_duration[ctp] + " OFF");
-					setTimeout(startPlayingFirstCtp,chord_duration[ctp]);
-				}
-				ctp++;
-			}
-		}
-
-
-		function sleep(milliseconds) {
-			var start = new Date().getTime();
-			  	for (var i = 0; i < 1e7; i++) {
-			    	if ((new Date().getTime() - start) > milliseconds){
-			      	break;
-			    }
-			}
-		}
-
-		//play all button functionalities
-		document.querySelectorAll("#play_all").forEach(togglePlayAll);
-
-		function togglePlayAll(item){
-			item.onclick = startPlayingHarmony;
-		}
-
-
-		function startPlayingHarmony(){
-
-			first = Math.min(chord_duration[0],note_duration[0]);
-			console.log("first starter = " + first);
-
-			second = Math.max(chord_duration[0],note_duration[0])-first;
-			console.log("second = " + second);
-
-			var max = Math.max(chord_duration[0],note_duration[0]);
-
-			if (max == note_duration[0]){console.log("la melodia parte dopo " + second + "ms");}
-			else {console.log("l'armonizzazione parte dopo " + second + "ms");}
-
-			//INIZIA A SUONARE DALLA NOTA IN POSIZIONE 1 DELL'ARRAY,RITARDANDO LA VOCE CHE INIZIA DOPO 
-			if (first == note_duration[0]){
-				k++; 
+				setTimeout(startPlayingChords,chord_duration[g]);
 				g++;
-				console.log("parte prima la melodia");
-				startPlaying();
-				sleep(second/1000);
-				startPlayingChords();
 			}
-			else {
-				k++;
-				g++;
-				console.log("parte prima l'armonizzazione");
-				startPlayingChords();
-				sleep(second/1000);
-				startPlaying();
-			}
+		}
+
+		var context = null;
+
+		var oscNode1 = null;
+		var oscNode2 = null;
+		var oscNode3 = null;
+		var constantNode = null;
+		var gainNode1 = null;
+		var gainNode2 = null;
+		var gainNode3 = null;		
+
+		/*function setup() {
+			//context = new AudioContext();
+
+			playButton = document.querySelector("#playButton");
+			volumeControl = document.querySelector("#volumeControl");
+
+			//playButton.addEventListener("click", togglePlay, false);
+			//volumeControl.addEventListener("input", changeVolume, false);
+
+			gainNode1 = context.createGain();
+			gainNode1.gain.value = 0.5;
+			 
+			gainNode2 = context.createGain();
+			gainNode3 = context.createGain();
+			gainNode2.gain.value = gainNode1.gain.value;
+			gainNode3.gain.value = gainNode1.gain.value;
+			//volumeControl.value = gainNode1.gain.value;
+
+			constantNode = context.createConstantSource();
+			constantNode.connect(gainNode2.gain);
+			constantNode.connect(gainNode3.gain);
+			constantNode.start();
+
+			gainNode1.connect(context.destination);
+			gainNode2.connect(context.destination);
+			gainNode3.connect(context.destination);
+		}
+
+		window.addEventListener("load", setup, false);	*/
+
+
+
+		var context;
+
+		function startOscillators(freq1,freq2) {
+
+			context = new AudioContext();
+			console.log("start");
+
+			gainNode1 = context.createGain();
+			gainNode1.gain.value = 0;
+			 
+			gainNode2 = context.createGain();
+			//gainNode3 = context.createGain();
+			gainNode2.gain.value = gainNode1.gain.value;
+			//gainNode3.gain.value = gainNode1.gain.value;
+			//volumeControl.value = gainNode1.gain.value;
+
+			constantNode = context.createConstantSource();
+			constantNode.connect(gainNode2.gain);
+			//constantNode.connect(gainNode3.gain);
+			constantNode.start();
+
+			gainNode1.connect(context.destination);
+			gainNode2.connect(context.destination);
+			//gainNode3.connect(context.destination);
+
+		  	oscNode1 = context.createOscillator();
+		  	oscNode1.frequency.value = freq1;
+		  	oscNode1.type = "sine";
+			oscNode1.connect(gainNode1);
+
+
+			oscNode2 = context.createOscillator();
+			oscNode2.frequency.value = freq2;
+			oscNode2.type = "sine";
+			oscNode2.connect(gainNode2);
+
+			/*oscNode3 = context.createOscillator();
+			oscNode3.frequency.value = keyb_first_ctp;
+			oscNode3.connect(gainNode3);*/
+
+			oscNode1.start();
+			oscNode2.start();
+
+			current_dur = chord_duration[g]/4000;
+
+			gainNode1.gain.linearRampToValueAtTime(0.3,current_dur); 
+  			gainNode1.gain.linearRampToValueAtTime(0,current_dur*4);
+
+  			gainNode2.gain.linearRampToValueAtTime(0.3,current_dur); 
+  			gainNode2.gain.linearRampToValueAtTime(0,current_dur*4);
+			//oscNode3.start();
+			 console.log("oscillator started");
+			//stopOscillators(chord_duration[g]);
+
+			console.log("keyb_chord_freq = " + keyb_chord_freq + " chord_duration = " + chord_duration[g] + " ON"+ " g= " +g);
+			console.log("keyb_ctp_freq = " + keyb_first_ctp + " chord_duration = " + chord_duration[g] + " ON"+ " g= " +g);
+
+			oscNode1.stop(chord_duration[g]/1000);
+			oscNode2.stop(chord_duration[g]/1000);
+			console.log("oscillator stopped");
 		}
 
 
@@ -510,76 +534,26 @@
 		function playMelody(freq){
 			c = new AudioContext();
 		    osc = c.createOscillator();
+		    gainNode = c.createGain();
+		    gainNode.gain.value = 0;
+		    gainNode.connect(c.destination);
 		    analyser = c.createAnalyser();
 		    analyser.fftSize = 2048;
 		    bufferLength = analyser.frequencyBinCount;
 			dataArray = new Uint8Array(bufferLength);
 			osc.connect(analyser);
-		    osc.connect(c.destination);
+			osc.connect(gainNode);
+		    //osc.connect(c.destination);
 		    osc.frequency.value = freq;
+		    current_dur = note_duration[k]/4000;
 		    osc.start();
+		    gainNode.gain.linearRampToValueAtTime(1,current_dur); 
+		   	gainNode.gain.linearRampToValueAtTime(0,current_dur*4); 
+  			//g.gain.linearRampToValueAtTime(0,note_duration[k]/2);
 		    drawMelodySamplesFreq();
 		    drawMelodySamplesTime();
 		    osc.stop(note_duration[k]/1000);
-		}
-
-
-		var context;
-		var osc_chord;
-		var analyser_min;
-		var bufferLength_min;
-		var dataArray_min;
-
-		function playMinNote(freq){
-			context = new AudioContext();
-			osc_chord = context.createOscillator();
-			analyser_min = context.createAnalyser();
-		    analyser_min.fftSize = 2048;
-		    bufferLength_min = analyser_min.frequencyBinCount;
-			dataArray_min = new Uint8Array(bufferLength_min);
-			osc_chord.connect(analyser_min);
-			osc_chord.connect(context.destination);
-			osc_chord.frequency.value = freq;
-			osc_chord.start();
-			drawMinNoteSamplesFreq();
-			drawMinNoteSamplesTime();
-			osc_chord.stop(chord_duration[g]/1000);
-		}
-
-
-		var audioC;
-		var osc_ctp;
-		var analyser_ctp;
-		var bufferLength_ctp;
-		var dataArray_ctp;
-
-		function playFirstCtp(freq){
-			audioC = new AudioContext();
-			osc_ctp = audioC.createOscillator();
-			analyser_ctp = audioC.createAnalyser();
-			analyser_ctp.fftSize = 2048;
-			bufferLength_ctp = analyser_ctp.frequencyBinCount;
-			dataArray_ctp = new Uint8Array(bufferLength_ctp);
-			osc_ctp.connect(analyser_ctp);
-			osc_ctp.connect(audioC.destination);
-			osc_ctp.frequency.value = freq;
-			osc_ctp.start();
-			drawCtpSamplesFreq();
-			drawCtpSamplesTime();
-			osc_ctp.stop(chord_duration[ctp]/1000);
-		}
-
-
-		var ctx;
-		var osc_harm;
-
-		function playCtpNotes(freq){
-			ctx = new AudioContext();
-			osc_harm = ctx.createOscillator();
-			osc_harm.connect(ctx.destination);
-			osc_harm.frequency.value = freq;
-			osc_harm.start();
-			osc_harm.stop(dur_harm[h]/1000);
+		    
 		}
 
 
