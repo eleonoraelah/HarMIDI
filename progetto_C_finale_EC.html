@@ -211,7 +211,9 @@
 			if (send){
 				navigator.requestMIDIAccess().then(onMIDISuccess);
 				counter = s_m;
+				//counter = counter+1;
 				counter_note = last_note_index;
+				counter_chord = last_chord_index;
 			}
 			else{
 				last_note_index = i;
@@ -284,7 +286,8 @@
 				} else {
 					duration_type[index] = 200; 
 					console.log(duration_type[index] + " " + time_type[index]+ " " + other_time[other_index]);
-				/*otherwise the duration is the arbitrary one*/}
+				/*otherwise the duration is the arbitrary one*/
+				}
 				noteOn_type[index] = false;
 		}
 
@@ -298,7 +301,7 @@
 		var s_m = 0;
 
 		function getMinNote(){
-			min_note = chord_array[0][1];
+			min_note = chord_array[counter][1];
 			while (m<chord_array.length){
 				if (chord_array[m][0] == chord_array[m-1][0]){
 					if (Math.min(min_note, chord_array[m][1]) == chord_array[m][1]){
@@ -393,25 +396,25 @@
 				midi_freq = note_array[k][1];
 				keyb_freq = min_keyb_freq*Math.pow(2,(midi_freq - min_midi_freq)**1/12);
 
-/*
-				if (k == counter){
+
+				/*if (k == counter_note){
 					setTimeout(startPlaying,note_duration[k]/1000);
 					console.log("k = 0 --> " + note_duration[k]/1000);
 					//k++;
-				}
-*/
-				//if (k>0 && noteOn[k]){
+				}*/
+
 				if(noteOn[k]){ // POSSIAMO PARTIRE DA ZERO A QUESTO PUNTO
 					playMelody(keyb_freq);
 					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " ON");
+					setTimeout(startPlaying, note_duration[k]);
 					//setTimeout(console.log(" k = "+k),duration[k]);
 				} else{
 					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " OFF");
+					setTimeout(startPlaying, note_duration[k]);
 					//setTimeout(startPlaying, note_duration[k]);
 					//setTimeout(console.log(" k = "+k),duration[k]);
 					
 				}
-				setTimeout(startPlaying, note_duration[k]);
 				k++;
 			}
 		}
@@ -432,75 +435,48 @@
 		var g = 0;
 
 		function startPlayingChords(){
-			if (g<min_note_array.length && g<ctp_vector.length){
+			if (g<min_note_array.length){
 				//Min Notes	
 				midi_chord_freq = min_note_array[g][1];
 				keyb_chord_freq = min_keyb_freq*Math.pow(2,(midi_chord_freq - min_midi_freq)**1/12);
 				//Ctp Notes
 				midi_first_ctp = ctp_vector[g];
 				keyb_first_ctp = min_keyb_freq*Math.pow(2,(midi_first_ctp - min_midi_freq)**1/12);
-				/*
-				if (g == 0){
+				
+				/*if (g == counter+1){
 					setTimeout(startPlayingChords,chord_duration[g]/1000);
 					console.log("g = 0, chord_duration = " + chord_duration[g]/1000);
-					g++;
+					//g++;
 				}*/
-				//if (g>0 && chordOn[g]==true){
-				if (chordOn[g]){
+				if (g>0 && chordOn[g]){
 					startOscillators(keyb_chord_freq,keyb_first_ctp);
+					setTimeout(startPlayingChords,chord_duration[g]);
 					
 				} else {
 					console.log("keyb_chord_freq = " + keyb_chord_freq + " chord_duration = " + chord_duration[g] + " OFF"+ " g= " +g);
 					console.log("keyb_ctp_freq = " + keyb_first_ctp + " chord_duration = " + chord_duration[g] + " OFF"+ " g= " +g);
-					//setTimeout(startPlayingChords,chord_duration[g]);
+					setTimeout(startPlayingChords,chord_duration[g]);
 				}
-				setTimeout(startPlayingChords,chord_duration[g]);
 				g++;
 			}
 		}
 
-		var context = null;
 
-		var oscNode1 = null;
-		var oscNode2 = null;
-		var oscNode3 = null;
-		var constantNode = null;
-		var gainNode1 = null;
-		var gainNode2 = null;
-		var gainNode3 = null;		
+		function startPlayingHarmony(){
 
-		/*function setup() {
-			//context = new AudioContext();
 
-			playButton = document.querySelector("#playButton");
-			volumeControl = document.querySelector("#volumeControl");
+				startPlaying();
+				startPlayingChords();
 
-			//playButton.addEventListener("click", togglePlay, false);
-			//volumeControl.addEventListener("input", changeVolume, false);
-
-			gainNode1 = context.createGain();
-			gainNode1.gain.value = 0.5;
-			 
-			gainNode2 = context.createGain();
-			gainNode3 = context.createGain();
-			gainNode2.gain.value = gainNode1.gain.value;
-			gainNode3.gain.value = gainNode1.gain.value;
-			//volumeControl.value = gainNode1.gain.value;
-
-			constantNode = context.createConstantSource();
-			constantNode.connect(gainNode2.gain);
-			constantNode.connect(gainNode3.gain);
-			constantNode.start();
-
-			gainNode1.connect(context.destination);
-			gainNode2.connect(context.destination);
-			gainNode3.connect(context.destination);
 		}
 
-		window.addEventListener("load", setup, false);	*/
 
 
-
+		var oscNode1;
+		var oscNode2;
+		var constantNode;
+		var gainNode1;
+		var gainNode2;		
 		var context;
 
 		function startOscillators(freq1,freq2) {
@@ -512,19 +488,15 @@
 			gainNode1.gain.value = 0;
 			 
 			gainNode2 = context.createGain();
-			//gainNode3 = context.createGain();
 			gainNode2.gain.value = gainNode1.gain.value;
-			//gainNode3.gain.value = gainNode1.gain.value;
 			//volumeControl.value = gainNode1.gain.value;
 
 			constantNode = context.createConstantSource();
 			constantNode.connect(gainNode2.gain);
-			//constantNode.connect(gainNode3.gain);
 			constantNode.start();
 
 			gainNode1.connect(context.destination);
 			gainNode2.connect(context.destination);
-			//gainNode3.connect(context.destination);
 
 		  	oscNode1 = context.createOscillator();
 		  	oscNode1.frequency.value = freq1;
@@ -537,10 +509,6 @@
 			oscNode2.type = "sine";
 			oscNode2.connect(gainNode2);
 
-			/*oscNode3 = context.createOscillator();
-			oscNode3.frequency.value = keyb_first_ctp;
-			oscNode3.connect(gainNode3);*/
-
 			oscNode1.start();
 			oscNode2.start();
 
@@ -551,9 +519,7 @@
 
   			gainNode2.gain.linearRampToValueAtTime(0.3,current_dur); 
   			gainNode2.gain.linearRampToValueAtTime(0,current_dur*4);
-			//oscNode3.start();
-			 console.log("oscillator started");
-			//stopOscillators(chord_duration[g]);
+			console.log("oscillator started");
 
 			console.log("keyb_chord_freq = " + keyb_chord_freq + " chord_duration = " + chord_duration[g] + " ON"+ " g= " +g);
 			console.log("keyb_ctp_freq = " + keyb_first_ctp + " chord_duration = " + chord_duration[g] + " ON"+ " g= " +g);
@@ -588,7 +554,6 @@
 		    osc.start();
 		    gainNode.gain.linearRampToValueAtTime(1,current_dur); 
 		   	gainNode.gain.linearRampToValueAtTime(0,current_dur*4); 
-  			//g.gain.linearRampToValueAtTime(0,note_duration[k]/2);
 		    drawMelodySamplesFreq();
 		    drawMelodySamplesTime();
 		    osc.stop(note_duration[k]/1000);
