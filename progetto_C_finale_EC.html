@@ -96,7 +96,7 @@
 		}
 
 		#container_0{
-			margin-top: -38%;
+			margin-top: -20%;
 		}
 
 		/*#container_1{
@@ -126,13 +126,18 @@
 			font-weight: 520;
 		}
 
+		.controls{
+			margin-top: -5%;
+			margin-left: 50%;
+		}
+
+
+
 	</style>
 </head>
 <body>
 	<h2>Progetto di un armonizzatore e sintetizzatore di una sequenza midi in ingresso</h2>
 	<div id="canvas_container">
-		<canvas class="canvas_block" id="freq_canvas"></canvas>
-		<p>Visualization of the frequency spectrum of the played signal</p>
 		<canvas class="canvas_block" id="time_canvas"></canvas>
 		<p>Visualization of the played signal in time domain</p>
 	</div>
@@ -151,18 +156,62 @@
 			<h5>Click the button below to start aquiring data:</h5>
 			<p>Click again when you finish recording.</p>
 			<button id="rec_button" class="btn btn-success">Record input data</button>
+				<div class="left">
+				    <div id="playButton" class="button">▶️
+				    </div>
+				</div>
+				<div class="right">
+				    <span>Volume: </span>
+				    <input type="range" min="0.0" max="1.0" step="0.01"
+				        value="0.8" name="volume" id="volumeControl">
+				</div>
+			</div>
 		</div>
 		<div id="container_2" class="container">
 			<h5>Click this play-button to play the input sequence:</h5>
 			<button id="play_button" class="btn btn-success">Play</button>
+			<div class="controls">
+				<div class="left">
+				    <div id="playButton" class="button">▶️
+				    </div>
+				</div>
+				<div class="right">
+				    <span>Volume: </span>
+				    <input type="range" min="0.0" max="1.0" step="0.01"
+				        value="0.8" name="volume" id="volumeControl">
+				</div>
+			</div>
 		</div>
 		<div id="container_3" class="container">
 			<h5>Click the button below to listen to the harmonized version:</h5>
 			<button id="harm_button" class="btn btn-success">Counterpoint notes</button>
+				<div class="controls">
+						<div class="left">
+						    <div id="playButton" class="button">▶️
+						    </div>
+						</div>
+						<div class="right">
+						    <span>Volume: </span>
+						    <input type="range" min="0.0" max="1.0" step="0.01"
+					        value="0.8" name="volume" id="volumeControl">
+					</div>
+				</div>
+
 		</div>
 		<div id="container_4" class="container">
 			<h5>Click here to listen to the harmonized version of the input piece:</h5>
 			<button id="play_all" class="btn btn-success">Complete version</button>
+			<div class="controls">
+				<div class="left">
+				    <div id="playButton" class="button">▶️
+				    </div>
+				</div>
+				<div class="right">
+				    <span>Volume: </span>
+				    <input type="range" min="0.0" max="1.0" step="0.01"
+				        value="0.8" name="volume" id="volumeControl">
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -247,6 +296,7 @@
 		}
 
 		var note_i = 0;
+		var total_duration = 0;
 
 		function makeNoteDur(){
 			note_duration = note_duration.concat(Array(note_array.length-counter_note));
@@ -255,6 +305,8 @@
 				getDurationNotes(note_i, note_array, note_time, chord_time, note_duration, noteOn, last_note_index, last_chord_index);
 				//getDurationNotes(note_i, note_array, note_time, chord_time, note_duration, noteOn, counter_note, counter);
 				note_i++;
+				total_duration = note_duration.reduce(getSum);
+				console.log("Total duration = " + total_duration);
 				console.log("Note_i " + note_i);
 				console.log("last note "+ last_note_index);
 			}
@@ -407,11 +459,10 @@
 					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " ON");
 				} else{
 					console.log(midi_freq + " = " + keyb_freq + " durata " + note_duration[k] + " OFF");
-					//setTimeout(console.log(" k = "+k),duration[k]);
 				}
 				setTimeout(startPlaying, note_duration[k]);
 				k++;
-			}
+			} //else {setTimeout(alert("AVISHAICOHEN"),2000);}
 		}
 
 
@@ -445,12 +496,27 @@
 				}
 				setTimeout(startPlayingChords,chord_duration[g]);
 				g++;
-			}
+			} //else {setTimeout(alert("SHAIMAESTRO"),2000);}
+		}
+
+		function getSum(total,num){
+			return total+num;
+		}
+
+		document.querySelectorAll("#play_all").forEach(toggleHarmony);
+		
+		function toggleHarmony(item){
+			item.onclick = startPlayingHarmony;
 		}
 
 		function startPlayingHarmony(){
+				
+				k = counter_note;
+				g = counter;
+
 				startPlaying();
 				startPlayingChords();
+
 		}
 
 		var oscNode1 = null;
