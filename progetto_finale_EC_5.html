@@ -33,6 +33,7 @@
 		}
 
 		.complete{
+			width: 129px;
 			margin-top: 4%;
 		}
 
@@ -44,9 +45,15 @@
 
 		.volume_tag_complete{
 			width: 53px;
-			margin: 8%;
+			margin: 4%;
 			margin-top: -1px;
+			font-size: smaller;
+			line-height: 90%;
 		}		
+
+		#second_ctp_volume{
+			margin-left: 52.5%;
+		}
 
 		.slidercontainer{
 			display: inline-flex;
@@ -73,6 +80,10 @@
 		  	border-radius: 50%;
 		  	background: #4CAF50;
 		  	cursor: pointer;
+		}
+
+		#slider4{
+			margin-left: 8%;
 		}
 	
 		.canvas_block{
@@ -256,9 +267,9 @@
 			<button id="play_all" class="btn btn-success">Complete version</button>
 			<div class="slidercontainer" id="slider4">
 				<!--<div class="span_container">-->
-					<p class="volume_tag_complete">Volume: <span id="span3_melody"></span></p>
+					<p class="volume_tag_complete">Melody volume: <span id="span3_melody"></span></p>
 					<input type="range" name="volume" min="0.0" max="1" step="0.01" value="0.5" id="volumeControl_3_melody" class="slider complete">
-					<p class="volume_tag_complete">Volume: <span id="span3_chords"></span></p>
+					<p class="volume_tag_complete">Chords volume: <span id="span3_chords"></span></p>
 					<input type="range" name="volume" min="0.0" max="1" step="0.01" value="0.5" id="volumeControl_3_chords" class="slider complete">
 
 				<!--</div>-->
@@ -270,7 +281,7 @@
 			<button id="second_ctp" class="btn btn-success">2nd counterpoint version</button>
 			<div class="slidercontainer" id="slider5">
 				<!--<div class="span_container">-->
-					<p class="volume_tag">Volume: <span id="span4"></span></p>
+					<p class="volume_tag_complete" id="second_ctp_volume">Ctp volume: <span id="span4"></span></p>
 					<input type="range" name="volume" min="0.0" max="1" step="0.01" value="0.5" id="volumeControl_4" class="slider single">
 				<!--</div>-->
 			</div>
@@ -299,7 +310,7 @@
 		var first_min_index; // First index of MinNote array in the subsequent recordings
 		var min_note_i; // Index used to populate min_note_array and min_note_time in the function getMinNote AND to keep track of the last index of min_note_array in the function record
 
-		var counter_second = 0; //?
+		var counter_second = 0; //keeps track of the index on the second counterpoint array
 		var last_note_second = 0;
 
 	// Getting MIDI Message for chords and melody
@@ -383,7 +394,7 @@
 		var gainNode1; // Gain node connected to OscNode1
 		var gainNode2; // Gain node connected to OscNode2
 		var gainNode3;
-		var analyser_min; // ?
+		var analyser_min; //analysers node to get a time representation of the played piece
 		var analyser_ctp
 		var bufferLength_min;
 		var bufferLength_ctp;
@@ -395,6 +406,7 @@
 
 		var volume_slider_4; // Element controlling the volume slider of Second Species Ctp Chords alone
 		var output_4; // Element controlling the intensity of the gain of the volume slider of Second Species Ctp Chords alone
+		var valore_gain_4; // Value of the gain for the reproduction of Second Species Ctp Chords alone
 		
 		var context_second;
 		var osc_second;
@@ -452,22 +464,12 @@
 				first_melody_index = last_melody_index;
 				first_min_index = min_note_i;
 				counter_second = last_note_second;
-/*
-				console.log("ctp2_i = " + counter_second);
-				console.log("begin first_min_index note = "+ first_melody_index + ", last_melody_index = "+ last_melody_index);
-				console.log("begin first_min_index min note = "+ first_min_index + ", min_note_i = "+ min_note_i);
-*/
 			}
 			else{
 				getMinNote();
 				getChordDuration();
 				getMelodyDuration();
 				last_note_second = chord_i*2;
-/*
-				console.log("end first_min_index note = "+ first_melody_index + ", last_melody_index = "+ last_melody_index + " TIME = "+ melody_time[note_i]);
-				console.log("end first_min_index min note = "+ first_min_index + ", min_note_i = "+ min_note_i +" TIME = "+ min_note_time[min_note_i]);
-				createFirstSpeciesCtp();
-*/
 			}
 		}
 	
@@ -619,17 +621,11 @@
 			}
 		}
 
-/*		var button_clicked = document.querySelector("#container_2").children.play_button;
+		var play_button_clicked = document.querySelector("#container_2").children.play_button;
+		var harm_button_clicked = document.querySelector("#container_3").children.harm_button;
+		var complete_button_clicked = document.querySelector("#container_4").children.play_all;
+		var second_button_clicked= document.querySelector("#container_5").children.second_ctp;
 
-		function changeColourPlay(){
-			if (harmony){
-				if (k == melody_duration.length && g == chord_duration.length){
-					button_clicked.classList.toggle("clicked_button");
-			} else {
-				button_clicked.classList.toggle("clicked_button");
-			}
-		}
-*/
 // Playing notes
 		harmony = false;
 
@@ -649,7 +645,7 @@
 		function callStartMelody(){
 			k = first_melody_index;
 			harmony = false;
-			//changeColourPlay();
+			play_button_clicked.classList.toggle("clicked_button");
 			StartMelody();
 		}
 		
@@ -668,8 +664,10 @@
 				setTimeout(StartMelody, melody_duration[k]);
 				k++;
 			}else {
+				if (!harmony){
+					play_button_clicked.classList.toggle("clicked_button");
+				}
 				harmony = true;
-				//changeColourPlay();
 			}
 		}
 
@@ -688,7 +686,7 @@
 		function changeVolumeMelody(event) {
 			output_1.innerHTML = volume_slider_1.value;
 			valore_gain = output_1.innerHTML;
-			console.log("valore_gain = " + valore_gain);
+			console.log("valore_gain_1 = " + valore_gain);
 		}
 
 		// Actual function starting the oscillators
@@ -736,7 +734,7 @@
 		function callStartFirstCtp(){
 			g = first_min_index;
 			harmony = false;
-			//changeColour();
+			harm_button_clicked.classList.toggle("clicked_button");
 			StartFirstCtp();
 		}
 
@@ -757,8 +755,11 @@
 				setTimeout(StartFirstCtp,chord_duration[g]);
 				g++;
 			} else {
-				harmony =true;
-				//changeColour();
+				if (harmony){
+					complete_button_clicked.classList.toggle("clicked_button");
+				} else {
+					harm_button_clicked.classList.toggle("clicked_button");
+				}
 			} 
 		}
 
@@ -784,11 +785,7 @@
 
 		function playFirstCtp(freq1,freq2) {
 
-			//console.log("start");
 			context = new AudioContext();
-
-			//gainNode3 = context.createGain();
-			//gainNode3.gain.value = valore_gain_2;
 
 			gainNode1 = context.createGain();
 			gainNode1.gain.value = valore_gain_2;
@@ -801,11 +798,9 @@
 			constantNode.connect(gainNode2.gain);
 			constantNode.offset.value = valore_gain_2;
 			constantNode.start();
-			//console.log("constantNode Started");
 
 			gainNode1.connect(context.destination);
 			gainNode2.connect(context.destination);
-			//gainNode3.connect(context.destination);
 
 		  	oscNode1 = context.createOscillator();
 		  	oscNode1.frequency.value = freq1;
@@ -817,11 +812,6 @@
 			oscNode2.type = "sine";
 			oscNode2.connect(gainNode2);
 
-/*			oscNode3 = context.createOscillator();
-			oscNode3.frequency.value = 0;
-			oscNode3.type = "sine";
-			oscNode3.connect(gainNode3);
-*/
 			analyser_min = context.createAnalyser();
 		    analyser_min.fftSize = 2048;
 		    bufferLength_min = analyser_min.frequencyBinCount;
@@ -836,7 +826,6 @@
 
 			oscNode1.start();
 			oscNode2.start();
-			//oscNode3.start();
 
 			current_dur = chord_duration[g]/4000;
 
@@ -845,18 +834,12 @@
 
   			gainNode2.gain.linearRampToValueAtTime(valore_gain_2,current_dur); 
 			gainNode2.gain.linearRampToValueAtTime(0,current_dur*4);
-	
-			//console.log("oscillator started");
-			//console.log("keyb_chord_freq = " + keyb_chord_freq + " chord_duration = " + chord_duration[g] + " ON"+ " g= " +g);
-			//console.log("keyb_ctp_freq = " + keyb_first_ctp + " chord_duration = " + chord_duration[g] + " ON"+ " g= " +g);
 
 			drawMinNoteSamplesTime();
 			drawCtpSamplesTime();
 
 			oscNode1.stop(chord_duration[g]/1000);
 			oscNode2.stop(chord_duration[g]/1000);
-			//oscNode3.stop(chord_duration[g]/1000);
-			//console.log("oscillator stopped");
 		}
 
 
@@ -872,7 +855,8 @@
 				
 				k = first_melody_index;
 				g = first_min_index;
-				//harmony = true;
+				harmony = true;
+				complete_button_clicked.classList.toggle("clicked_button");
 				StartMelody();
 				StartFirstCtp();
 		}
@@ -880,12 +864,16 @@
 		// Manage VOLUME for MELODY
 		volume_slider_3_melody = document.getElementById("volumeControl_3_melody");	
 		output_3_melody = document.getElementById("span3_melody");
+		output_3_melody.innerHTML = volumeControl_3_melody.value;
+		
 		document.querySelectorAll("#volumeControl_3_melody").forEach(toggleVolume_Melody);
-		valore_gain_3_melody = 0.5;
+		valore_gain_3_melody = 1;
 
-		// Manage VOLUME for MELODY
+		// Manage VOLUME for CHORDS
 		volume_slider_3_chords = document.getElementById("volumeControl_3_chords");
 		output_3_chords = document.getElementById("span3_chords");
+		output_3_chords.innerHTML = volumeControl_3_chords.value;
+		
 		document.querySelectorAll("#volumeControl_3_chords").forEach(toggleVolume_Chords);
 		var valore_gain_3_chords = 0.5;
 
@@ -893,57 +881,38 @@
 			item.onmouseup = changeVolume_Melody;
 		}
 
-
 		function toggleVolume_Chords(item){
 			item.onmouseup = changeVolume_Chords;
 		}
 
 		function changeVolume_Melody(event) {
 			output_3_melody.innerHTML = volume_slider_3_melody.value;
-			valore_gain_3_melody = output_3_melody.innerHTML;
-			console.log("valore_gain = " + valore_gain_3_melody);
+			//valore_gain_3_melody = output_3_melody.innerHTML;
+			valore_gain = output_3_melody.innerHTML;
+			console.log("valore_gain_3_melody = " + valore_gain);
 		}
 
 		function changeVolume_Chords(event) {
 			output_3_chords.innerHTML = volume_slider_3_chords.value;
-			valore_gain_3_chords = (volume_slider_3_chords.value)/3;
-			constantNode.offset.value = valore_gain_3_chords;
-			console.log("valore gain = " + valore_gain_3_chords);
-			console.log("gain value = " + constantNode.offset.value);
+			//valore_gain_3_chords = (volume_slider_3_chords.value)/3;
+			//constantNode.offset.value = valore_gain_3_chords;
+			valore_gain_2 = (volume_slider_3_chords.value)/3;
+			constantNode.offset.value = valore_gain_2;
+			console.log("valore valore_gain_3_chords = " + valore_gain_2);
+			console.log("gain value 3 cN = " + constantNode.offset.value);
 		}
 
-		
-		
-		
 
-		
-		volume_slider_4 = document.getElementById("volumeControl_4");
-		document.querySelectorAll("#volumeControl_4").forEach(toggleVolumeSecondCtp);
-
-		output_4 = document.getElementById("span4");
-		output_4.innerHTML = volume_slider_4.value;
-
-		function toggleVolumeSecondCtp(item){
-			item.oninput = changeVolumeSecondCtp;
-		}
-
-		function changeVolumeSecondCtp(event) {
-			output_4.innerHTML = volume_slider_4.value;
-			gainSecond.gain.value = output_4.innerHTML;
-			console.log("gain value = " + gainSecond.gain.value);
-		}
-
+		//second counterpoint 
 		document.querySelectorAll("#second_ctp").forEach(toggle_Second_ctp);
 		
 		function toggle_Second_ctp(item){
 			item.onclick = startPlayingAll_Second;
 		}
 
-
 		y = 0;
 
 		function startPlayingSecondCtp(){
-			//console.log("SECOND CTP");
 
 			if (y<ctp2_array.length){
 				//Melody notes
@@ -954,16 +923,17 @@
 					playSecondCtp(keyb_freq_second);
 					console.log("midi_freq_second = " + keyb_freq_second + " harm_duration = " + ctp2_duration[y] + " ON"+ " y= " +y);
 				} else{
-					//console.log(midi_freq_second + " = " + keyb_freq_second + " durata " + ctp2_duration[p] + " OFF");
 					console.log("midi_freq_second = " + keyb_freq_second + " harm_duration = " + ctp2_duration[y] + " OFF"+ " y= " +y);
 				}
 				setTimeout(startPlayingSecondCtp, ctp2_duration[y]);
 				y++;
+			} else if (harmony) {
+				second_button_clicked.classList.toggle("clicked_button");
 			}
 		}
 
 		function startPlayingMinNotes(){
-			console.log("HERE");
+
 			if (g<min_note_array.length){
 				midi_chord_freq = min_note_array[g][1];
 				keyb_chord_freq = min_keyb_freq*Math.pow(2,(midi_chord_freq - min_midi_freq)**1/12);
@@ -976,7 +946,7 @@
 				}
 				setTimeout(startPlayingMinNotes,chord_duration[g]);
 				g++;
-			}
+			} 
 		}
 
 
@@ -985,13 +955,32 @@
 				k = first_melody_index;
 				g = first_min_index;
 				y = counter_second;
-				harmony = false;
-				//changeColour();
+				harmony = true;
+				second_button_clicked.classList.toggle("clicked_button");
 				StartMelody();
 				startPlayingMinNotes();
 				startPlayingSecondCtp();
 
 		}
+
+		//managing VOLUME -->only controls the second counterpoint notes volume
+		volume_slider_4 = document.getElementById("volumeControl_4");
+		output_4 = document.getElementById("span4");
+		output_4.innerHTML = volume_slider_4.value;
+		valore_gain_4 = 1;
+
+		document.querySelectorAll("#volumeControl_4").forEach(toggleVolumeSecondCtp);
+
+		function toggleVolumeSecondCtp(item){
+			item.oninput = changeVolumeSecondCtp;
+		}
+
+		function changeVolumeSecondCtp(event) {
+			output_4.innerHTML = volume_slider_4.value;
+			valore_gain_4 = output_4.innerHTML;
+			console.log("valore_gain_4 = " + valore_gain_4);
+		}
+
 
 		function playMinNote(freq){
 			context_first = new AudioContext();
@@ -1018,7 +1007,7 @@
 			osc_second = context_second.createOscillator();
 			
 			gainSecond = context_second.createGain();
-			gainSecond.gain.value = 0;
+			gainSecond.gain.value = valore_gain_4;
 			gainSecond.connect(context_second.destination);
 			
 			analyser_second = context_second.createAnalyser();
@@ -1034,7 +1023,7 @@
 			
 			osc_second.start();
 			
-			gainSecond.gain.linearRampToValueAtTime(1,current_dur); 
+			gainSecond.gain.linearRampToValueAtTime(valore_gain_4,current_dur); 
 		   	gainSecond.gain.linearRampToValueAtTime(0,current_dur*4); 
 			
 			drawSecondCtpSamplesTime();
