@@ -88,7 +88,7 @@
 	
 		.canvas_block{
 			position: relative;
-			border:2px solid black;
+			border:1px solid black;
 			width: 600px;
 			height: 200px;
 			background-color: #FFFAF0;
@@ -111,7 +111,6 @@
 
 		body{
 			background-color:#FF8C00;
-			/*background-repeat: no-repeat;*/
 		} 
 
 		.container_all{
@@ -716,7 +715,7 @@
 		    gainNode.connect(analyserMelody);
 			analyserMelody.connect(c.destination);
 		    
-		    analyserMelody.fftSize = 128;
+		    analyserMelody.fftSize = 256;
 		    bufferLength = analyserMelody.frequencyBinCount;
 			dataArray = new Uint8Array(bufferLength);
 			
@@ -1005,20 +1004,22 @@
 
 		function playMinNote(freq){
 			context_first = new AudioContext();
-			osc_chord = context_first.createOscillator();
 			
+			osc_chord = context_first.createOscillator();
 			analyser_first = context_first.createAnalyser();
-		    analyser_first.fftSize = 2048;
+		    
+		    analyser_first.fftSize = 256;
 		    bufferLength_first = analyser_first.frequencyBinCount;
 			dataArray_first = new Uint8Array(bufferLength_first);
-			osc_chord.connect(analyser_first);
 			
-			osc_chord.connect(context_first.destination);
+			osc_chord.connect(analyser_first);
+			analyser_first.connect(context_first.destination);
+			
 			osc_chord.frequency.value = freq;
 			
 			osc_chord.start();
 			
-			//drawSamples(analyser_first,dataArray_first,bufferLength_first);
+			drawMinNotes();
 			
 			osc_chord.stop(chord_duration[g]/1000);
 		}
@@ -1028,16 +1029,21 @@
 			osc_second = context_second.createOscillator();
 			
 			gainSecond = context_second.createGain();
+			
 			gainSecond.gain.value = valore_gain_4;
-			gainSecond.connect(context_second.destination);
+			//gainSecond.connect(context_second.destination);
 			
 			analyser_second = context_second.createAnalyser();
-			analyser_second.fftSize = 2048;
+			
+			analyser_second.fftSize = 256;
 			bufferLength_second = analyser_second.frequencyBinCount;
 			dataArray_second = new Uint8Array(bufferLength_second);
-			osc_second.connect(analyser_second);
+			//osc_second.connect(analyser_second);
 			
 			osc_second.connect(gainSecond);
+			gainSecond.connect(analyser_second);
+			analyser_second.connect(context_second.destination);
+
 			osc_second.frequency.value = freq;
 			
 			current_dur = ctp2_duration[y]/4000;
@@ -1047,8 +1053,8 @@
 			gainSecond.gain.linearRampToValueAtTime(valore_gain_4,current_dur); 
 		   	gainSecond.gain.linearRampToValueAtTime(0,current_dur*4); 
 			
-			//drawSamples(analyser_second,dataArray_second,bufferLength_second);
-			
+			drawSecondCtp();
+
 			osc_second.stop(ctp2_duration[y]/1000);
 		}
 
@@ -1067,20 +1073,22 @@
 	      	drawVisual = requestAnimationFrame(drawMelody);
 
 	      	analyserMelody.getByteFrequencyData(dataArray);
+			
 			ctx_time.clearRect(0, 0, WIDTH, HEIGHT);
+			ctx_time.fillStyle = 'rgb(255, 255, 255)';
 	      	ctx_time.fillRect(0, 0, WIDTH, HEIGHT);
 
-	      	var barWidth = (WIDTH / bufferLength) * 2.5;
+	      	var barWidth_x = (WIDTH / bufferLength) * 2.5;
 			var barHeight;
 			var x = 0;
 
 			for(var i = 0; i < bufferLength; i++) {
 		        barHeight = dataArray[i]/2;
 
-		        ctx_time.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
-		        ctx_time.fillRect(x,HEIGHT-barHeight/2,barWidth,barHeight);
+		        ctx_time.fillStyle = 'rgb(50,50,50)';
+		        ctx_time.fillRect(x,HEIGHT-barHeight/2,barWidth_x,barHeight);
 
-		        x += barWidth + 1;
+		        x += barWidth_x + 1;
 		    }
 		}
 
@@ -1108,6 +1116,54 @@
 
 		        ctx_time.fillStyle = 'rgb(0,225,225)';
 		        ctx_time.fillRect(x,HEIGHT-barHeight_y/2,barWidth_x,barHeight_y);
+
+		        x += barWidth_x + 1;
+		    }
+		}
+
+		
+		function drawMinNotes() {
+	      	requestAnimationFrame(drawMinNotes);
+
+	      	analyser_first.getByteFrequencyData(dataArray_first);
+
+			ctx_time.clearRect(0, 0, WIDTH, HEIGHT);
+			ctx_time.fillStyle = 'rgb(255, 255, 255)';
+	      	ctx_time.fillRect(0, 0, WIDTH, HEIGHT);
+
+	      	var barWidth_x = (WIDTH / bufferLength_first) * 2.5;
+	      	var barHeight;
+			var x = 0;
+
+			for(var i = 0; i < bufferLength_first; i++) {
+		       	barHeight = dataArray_first[i]/2;
+
+		        ctx_time.fillStyle = 'rgb(150,50,50)';
+		        ctx_time.fillRect(x,HEIGHT-barHeight/4,barWidth_x,barHeight);
+
+		        x += barWidth_x + 1;
+		    }
+		}
+
+
+		function drawSecondCtp() {
+	      	requestAnimationFrame(drawSecondCtp);
+
+	      	analyser_second.getByteFrequencyData(dataArray_second);
+			
+			ctx_time.clearRect(0, 0, WIDTH, HEIGHT);
+			ctx_time.fillStyle = 'rgb(255, 255, 255)';
+	      	ctx_time.fillRect(0, 0, WIDTH, HEIGHT);
+
+	      	var barWidth_x = (WIDTH / bufferLength_second) * 2.5;
+			var barHeight;
+			var x = 0;
+
+			for(var i = 0; i < bufferLength_second; i++) {
+		        barHeight = dataArray_second[i]/2;
+
+		        ctx_time.fillStyle = 'rgb(200,50,50)';
+		        ctx_time.fillRect(x,HEIGHT-barHeight,barWidth_x,barHeight);
 
 		        x += barWidth_x + 1;
 		    }
