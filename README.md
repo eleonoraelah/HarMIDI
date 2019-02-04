@@ -21,7 +21,7 @@ To be able to use this application, the user needs:
   * a MIDI Player application, used to transmit the MIDI sequence;
   * a virtual or serial MIDI port, to connect the MIDI transmission to the Web Application
 
-<p align="center"> <img src="./player.png"  height="180"> </p>    <<<-----SISTEMARE
+<p align="center"> <img src="./player.png"  height="180"> </p> 
 
 Before starting the recording, the user has to choose a song in the MIDI Player; then melody’s and chords’ channel numbers have to be selected in the Web Application. 
 
