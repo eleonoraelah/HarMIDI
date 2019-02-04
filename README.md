@@ -1,5 +1,5 @@
 # HarMIDI
-
+<p align="center"> <img src="./img/panoramica.png" > </p> 
 HarMidi is a digital harmonizer of MIDI input tracks, whose work is based on First and Second Species Counterpoint rules. 
 
 ### Creators
@@ -25,7 +25,7 @@ To be able to use this application, the user needs:
 
 Before starting the recording, the user has to choose a song in the MIDI Player; then melody’s and chords’ channel numbers have to be selected in the Web Application. 
 
-[FOTO DEI COSI DOVE SI SELEZIONA CANALE MELODIA E ACCORDI]
+<p align="center"> <img src="./img/Channels.png" > </p> 
 
 ### MIDI input recording
 
@@ -38,7 +38,7 @@ Before starting the recording, the user has to choose a song in the MIDI Player;
 Press the button Play to hear the melody. 
 The volume can be controlled using the slider next to the button.
 
-[FOTO BOTTONE E SLIDER]
+<p align="center"> <img src="./img/play_melody.png" > </p> 
 
 ### Chords' generation
 
@@ -55,14 +55,14 @@ Press the button ‘1st Counterpoint version’ to hear the First Species Ctp ch
 Press the button ‘2nd Counterpoint version’ to hear the Second Species Ctp chords.
 Volume of both versions can be controlled by tuning the respective sliders. 
 
-[FOTO DEL CONTAINER RISPETTIVO]
+<p align="center"> <img src="./img/ctp.png" > </p> 
 
 ### Reconstruction of the song
 
 Press the button ‘Complete’ to hear both melody and chords playing together.
 Volumes of both melody and generated chords can be controlled using the sliders next to the button. 
 
-[FOTO DEL CONTAINER RISPETTIVO]
+<p align="center"> <img src="./img/complete.png" > </p> 
 
 ### Sound Synthesis
 
