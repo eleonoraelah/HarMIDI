@@ -5,7 +5,7 @@
 	<title>HarMIDI</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
-	<link rel="stylesheet" type="text/css" href="harMIDI0422019.css">
+	<link rel="stylesheet" type="text/css" href="harMIDI04022019.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
@@ -259,7 +259,7 @@
 
 	// Variables tuning the canvas showing the time evolution of the waves reproduced
 		var time_canvas;
-		var ctx_time;
+		var canvas_ctx;
 
 
 
@@ -445,7 +445,7 @@
 			}
 		}
 
-		play_button_clicked = document.querySelector("#container_2").children.play_button;
+		play_button_clicked = document.querySelector("#play_button")/*.children.play_button*/;
 		harm_button_clicked = document.querySelector("#container_3").children.harm_button;
 		complete_button_clicked = document.querySelector("#container_4").children.play_all;
 		second_button_clicked = document.querySelector("#container_5").children.second_ctp;
@@ -625,7 +625,7 @@
 		document.querySelectorAll("#volumeControl_2").forEach(toggleVolumeFirstCtp);
 		output_2 = document.getElementById("span2");
 		output_2.innerHTML = volume_slider_2.value;
-		valore_gain_2 = 0.5;
+		valore_gain_2 = 0.5/3;
 
 		function toggleVolumeFirstCtp(item){
 			item.onmouseup = changeVolumeFirstCtp;
@@ -713,6 +713,7 @@
 			k = first_melody_index;
 			g = first_min_index;
 			harmony = true;
+			second = false;
 			complete_button_clicked.classList.toggle("clicked_button");
 
 			startMelody();
@@ -818,9 +819,9 @@
 				y = counter_second;
 				harmony = true;
 				second = true;
-				cost = 5;
+				cost = 3;
 				second_button_clicked.classList.toggle("clicked_button");
-				startMelody();
+				//startMelody();
 				startPlayingMinNotes();
 				startPlayingSecondCtp();
 				//drawSecondCtp();
@@ -905,12 +906,12 @@
 
 		//time domain visualization of the selected item
 		time_canvas = document.querySelector("#time_canvas");
-		ctx_time = time_canvas.getContext("2d");
+		canvas_ctx = time_canvas.getContext("2d");
 
 		WIDTH = time_canvas.width;
 		HEIGHT = time_canvas.height;
 
-		ctx_time.fillStyle = 'rgb(255, 255, 255)';
+		canvas_ctx.fillStyle = 'rgb(255, 255, 255)';
 
 
 		function drawMelody() {
@@ -918,9 +919,9 @@
 
 	      	analyserMelody.getByteFrequencyData(dataArray);
 			
-			ctx_time.clearRect(0, 0, WIDTH, HEIGHT);
-			ctx_time.fillStyle = 'rgb(255, 255, 255)';
-	      	ctx_time.fillRect(0, 0, WIDTH, HEIGHT);
+			canvas_ctx.clearRect(0, 0, WIDTH, HEIGHT);
+			canvas_ctx.fillStyle = 'rgb(255, 255, 255)';
+	      	canvas_ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
 	      	var barWidth_x = (WIDTH / bufferLength) * 2.5;
 			var barHeight;
@@ -929,8 +930,8 @@
 			for(var i = 0; i < bufferLength; i++) {
 		        barHeight = dataArray[i]/2;
 
-		        ctx_time.fillStyle = 'rgb(50,50,50)';
-		        ctx_time.fillRect(x,HEIGHT-barHeight/2,barWidth_x,barHeight);
+		        canvas_ctx.fillStyle = 'rgb(50,50,50)';
+		        canvas_ctx.fillRect(x,HEIGHT-barHeight/2,barWidth_x,barHeight);
 
 		        x += barWidth_x + 1;
 		    }
@@ -942,9 +943,9 @@
 	      	analyser_min.getByteFrequencyData(dataArray_min);
 	      	analyser_ctp1.getByteFrequencyData(dataArray_ctp1);
 
-			ctx_time.clearRect(0, 0, WIDTH, HEIGHT);
-			ctx_time.fillStyle = 'rgb(255, 255, 255)';
-	      	ctx_time.fillRect(0, 0, WIDTH, HEIGHT);
+			canvas_ctx.clearRect(0, 0, WIDTH, HEIGHT);
+			canvas_ctx.fillStyle = 'rgb(255, 255, 255)';
+	      	canvas_ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
 	      	var barWidth_x = (WIDTH / bufferLength_min) * 2.5;
 			var barHeight_x;
@@ -955,11 +956,11 @@
 		        barHeight_x = dataArray_min[i]/2;
 		        barHeight_y = dataArray_ctp1[i]/2;
 
-		        ctx_time.fillStyle = 'rgb(255,50,50)';
-		        ctx_time.fillRect(x,HEIGHT-barHeight_x,barWidth_x,barHeight_x);
+		        canvas_ctx.fillStyle = 'rgb(255,50,50)';
+		        canvas_ctx.fillRect(x,HEIGHT-barHeight_x,barWidth_x,barHeight_x);
 
-		        ctx_time.fillStyle = 'rgb(0,225,225)';
-		        ctx_time.fillRect(x,HEIGHT-barHeight_y/2,barWidth_x,barHeight_y);
+		        canvas_ctx.fillStyle = 'rgb(0,225,225)';
+		        canvas_ctx.fillRect(x,HEIGHT-barHeight_y/2,barWidth_x,barHeight_y);
 
 		        x += barWidth_x + 1;
 		    }
@@ -984,9 +985,9 @@
 	      	analyser_min.getByteFrequencyData(dataArray_min);
 	      	analyser_ctp1.getByteFrequencyData(dataArray_ctp1);
 
-			ctx_time.clearRect(0, 0, WIDTH, HEIGHT);
-			ctx_time.fillStyle = 'rgb(255, 255, 255)';
-	      	ctx_time.fillRect(0, 0, WIDTH, HEIGHT);
+			canvas_ctx.clearRect(0, 0, WIDTH, HEIGHT);
+			canvas_ctx.fillStyle = 'rgb(255, 255, 255)';
+	      	canvas_ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
 	      	var barWidth = (WIDTH / bufferLength_min) * 2.5;
 	      	var barHeight_melody;
@@ -999,14 +1000,14 @@
 		        barHeight_y = dataArray_ctp1[i]/2;
 		        barHeight_melody = dataArray[i]/2;
 
-		        ctx_time.fillStyle = 'rgb(255,50,50)';
-		        ctx_time.fillRect(x,HEIGHT-barHeight_x,barWidth,barHeight_x);
+		        canvas_ctx.fillStyle = 'rgb(255,50,50)';
+		        canvas_ctx.fillRect(x,HEIGHT-barHeight_x,barWidth,barHeight_x);
 
-		        ctx_time.fillStyle = 'rgb(0,225,225)';
-		        ctx_time.fillRect(x,HEIGHT-barHeight_y/2,barWidth,barHeight_y);
+		        canvas_ctx.fillStyle = 'rgb(0,225,225)';
+		        canvas_ctx.fillRect(x,HEIGHT-barHeight_y/2,barWidth,barHeight_y);
 
-		        ctx_time.fillStyle = 'rgb(50,50,50)';
-		        ctx_time.fillRect(x,HEIGHT-barHeight_melody/4,barWidth,barHeight_melody);
+		        canvas_ctx.fillStyle = 'rgb(50,50,50)';
+		        canvas_ctx.fillRect(x,HEIGHT-barHeight_melody/4,barWidth,barHeight_melody);
 
 		        x += barWidth + 1;
 		    }
@@ -1020,9 +1021,9 @@
 			analyser_first.getByteFrequencyData(dataArray_first);	      	
 	      	analyser_second.getByteFrequencyData(dataArray_second);
 			
-			ctx_time.clearRect(0, 0, WIDTH, HEIGHT);
-			ctx_time.fillStyle = 'rgb(255, 255, 255)';
-	      	ctx_time.fillRect(0, 0, WIDTH, HEIGHT);
+			canvas_ctx.clearRect(0, 0, WIDTH, HEIGHT);
+			canvas_ctx.fillStyle = 'rgb(255, 255, 255)';
+	      	canvas_ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
 	      	var barWidth_x = (WIDTH / bufferLength_second) * 2.5;
 			var barHeight_x;
@@ -1036,14 +1037,14 @@
 		        barHeight_y = dataArray_first[i]/2;
 		        barHeight_z = dataArray_second[i]/2;
 
-		        ctx_time.fillStyle = 'rgb(50,50,50)';
-		        ctx_time.fillRect(x,HEIGHT-barHeight_x,barWidth_x,barHeight_x);
+		        canvas_ctx.fillStyle = 'rgb(50,50,50)';
+		        canvas_ctx.fillRect(x,HEIGHT-barHeight_x,barWidth_x,barHeight_x);
 
-		        ctx_time.fillStyle = 'rgb(255,50,50)';
-		        ctx_time.fillRect(x,HEIGHT-barHeight_y/2,barWidth_x,barHeight_y);
+		        canvas_ctx.fillStyle = 'rgb(255,50,50)';
+		        canvas_ctx.fillRect(x,HEIGHT-barHeight_y/2,barWidth_x,barHeight_y);
 
-		        ctx_time.fillStyle = 'rgb(100,50,50)';
-		        ctx_time.fillRect(x,HEIGHT-barHeight_z/4,barWidth_x,barHeight_z);
+		        canvas_ctx.fillStyle = 'rgb(100,50,50)';
+		        canvas_ctx.fillRect(x,HEIGHT-barHeight_z/4,barWidth_x,barHeight_z);
 
 		        x += barWidth_x + 1;
 		    }
