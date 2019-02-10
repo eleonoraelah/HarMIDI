@@ -29,7 +29,7 @@ Before starting the recording, the user has to choose a song in the MIDI Player;
 
 ### MIDI input recording
 
-1. Click on the button START to begin acquiring the input data (the button will change color and become blue);
+1. Click on the button START to begin acquiring the input data, the button will change color and become blue (it is strongly advised to transmit data in small time windows, due to some synchronicity issues caused by the Web Audio API);
 1. To start playing the song, click on the button Play in the MIDI Player;
 1. To stop recording, click pause in the MIDI Player, and click again on the STOP button.
 
