@@ -26,6 +26,7 @@ To be able to use this application, the user needs:
 Before starting the recording, the user has to choose a song in the MIDI Player; then melody’s and chords’ channel numbers have to be selected in the Web Application. 
 
 <p align="center"> <img src="./img/Channels.png" > </p> 
+<p align="center"> <img src="./img/tab_channels.png" width="700" > </p> 
 
 ### MIDI input recording
 
